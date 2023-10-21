@@ -23,14 +23,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    const test_exe = b.addExecutable(.{
-        .name = "test",
-        // In this case the main source file is merely a path, however, in more
-        // complicated build scripts, this could be a generated file.
-        .root_source_file = .{ .path = "src/test.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
+
     // b.getInstallStep().dependOn(&b.addInstallDirectory(.{
     //     .source_dir = exe.getEmittedDocs(),
     //     .install_subdir = "docs",
@@ -41,8 +34,7 @@ pub fn build(b: *std.Build) void {
     const zap = b.dependency("zap", .{});
     exe.addModule("zap", zap.module("zap"));
     exe.linkLibrary(zap.artifact("facil.io"));
-    test_exe.addModule("zap", zap.module("zap"));
-    test_exe.linkLibrary(zap.artifact("facil.io"));
+
     // sqpltie3
     const sqlite = b.dependency("sqlite", .{
         .target = target,
@@ -50,9 +42,7 @@ pub fn build(b: *std.Build) void {
     });
     exe.addModule("sqlite", sqlite.module("sqlite"));
     exe.linkLibrary(sqlite.artifact("sqlite"));
-    test_exe.addModule("sqlite", sqlite.module("sqlite"));
-    test_exe.linkLibrary(sqlite.artifact("sqlite"));
+
 
     b.installArtifact(exe);
-    b.installArtifact(test_exe);
 }

@@ -1,13 +1,8 @@
-//! This is enpoint responsible for any visist for /post
-//! GET /post/<id> | /post
-//! POST /post/<id> <= JSON(post)
-//! PUT /post/<id> <= JSON(post)
-//! DELETE /post/<id> <= JSON(post)
-//! See also: `Post`
+
 const std = @import("std");
 const zap = @import("zap");
 const Sqlite = @import("sqlite.zig");
-const Comment = @import("comment.zig");
+const Comment = @import("data.zig").Comment;
 const idFromPath = @import("util.zig").idFromPath;
 
 pub const Self = @This();

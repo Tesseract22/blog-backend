@@ -1,7 +1,9 @@
 const sqlite = @import("sqlite");
 const std = @import("std");
-const Post = @import("post.zig");
-const Comment = @import("comment.zig");
+const data = @import("data.zig");
+const Post = data.Post;
+const Comment = data.Comment;
+const Commenter = data.Commenter;
 const Arena = std.heap.ArenaAllocator;
 pub const PATH = "test.db";
 const Sqlite = @This();
@@ -145,5 +147,21 @@ pub fn updateComment(self: *Sqlite, comment: Comment) !void {
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     try stmt.exec(.{}, comment);
+}
+
+pub fn insertCommenter(self: *Sqlite, commenter: Commenter) !void {
+    const q = 
+        \\INSERT INTO COMMENTER (EMAIL, USERNAME, ROWID) values (?,?,?)
+    ;
+    var stmt = self.db.prepare(q) catch unreachable;
+    try stmt.exec(.{}, commenter);
+}
+
+pub fn insertCommenterIfNotExist(self: *Sqlite, username: []const u8, email: []const u8, arena: *Arena) !Commenter {
+    const q = 
+        \\SELECT *, ROWID FROM COMMENTER WHERE USERNAME = ? and EMAIL = ?
+    ;
+    var stmt = self.db.prepare(q) catch unreachable;
+    return stmt.oneAlloc(Comment, arena.allocator(), .{}, .{username, email});
 }
 
