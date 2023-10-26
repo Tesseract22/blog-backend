@@ -2,11 +2,13 @@ const std = @import("std");
 const zap = @import("zap");
 const Enpoint = @import("endpoint.zig");
 const Sqlite = @import("sqlite.zig");
+const Config = @import("config.zig");
+const memeql = std.mem.eql;
 // this is just to demo that we can catch arbitrary slugs
+
+
 fn on_request(r: zap.SimpleRequest) void {
-    if (r.path) |the_path| {
-        std.debug.print("REQUESTED PATH: {s}\n", .{the_path});
-    }
+    
     r.sendBody("<html><body><h1>Hello from ZAP!!!</h1></body></html>") catch return;
 }
 
@@ -27,7 +29,7 @@ pub fn main() !void {
                 .port = 3000,
                 .on_request = on_request,
                 .log = true,
-                .public_folder = "html",
+                .public_folder = Config.PublicFolder,
                 .max_clients = 100000,
                 .max_body_size = 100 * 1024 * 1024,
             },
@@ -36,8 +38,10 @@ pub fn main() !void {
 
         var post_end = Enpoint.PostEndPoint.init(allocator, "/post", &db);
         var comment_end = Enpoint.CommentEndPoint.init(allocator, "/comment", &db);
+        var image_end = Enpoint.ImageEndPoint.init(allocator, "/image");
         try listener.addEndpoint(post_end.getEndpoint());
         try listener.addEndpoint(comment_end.getEndpoint());
+        try listener.addEndpoint(image_end.getEndpoint());
 
         // listen
         try listener.listen();

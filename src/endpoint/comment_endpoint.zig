@@ -6,7 +6,7 @@ const Data = @import("../data.zig");
 const Comment = Data.Comment;
 const CommentFull = Data.CommentFull;
 const idFromPath = @import("../util.zig").idFromPath;
-
+const AuthRequest = @import("../util.zig").AuthRequest;
 pub const Self = @This();
 
 alloc: std.mem.Allocator,
@@ -106,6 +106,7 @@ fn postComment(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 
 
 fn putComment(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
     const self = @fieldParentPtr(Self, "endpoint", e);
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
@@ -127,6 +128,7 @@ fn putComment(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 
 
 fn deleteComment(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
     const self = @fieldParentPtr(Self, "endpoint", e);
     if (r.path) |path| {
         if (self.commentIdFromPath(path)) |id| {
