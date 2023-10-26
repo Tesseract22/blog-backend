@@ -1,7 +1,6 @@
 const std = @import("std");
 const zap = @import("zap");
-const PostEndpoint = @import("post_endpoint.zig");
-const CommentEndPoint = @import("comment_endpoint.zig");
+const Enpoint = @import("endpoint.zig");
 const Sqlite = @import("sqlite.zig");
 // this is just to demo that we can catch arbitrary slugs
 fn on_request(r: zap.SimpleRequest) void {
@@ -35,10 +34,8 @@ pub fn main() !void {
         );
         defer listener.deinit();
 
-        var post_end = PostEndpoint.init(allocator, "/post", &db);
-        var comment_end = CommentEndPoint.init(allocator, "/comment", &db);
-
-        // add endpoint
+        var post_end = Enpoint.PostEndPoint.init(allocator, "/post", &db);
+        var comment_end = Enpoint.CommentEndPoint.init(allocator, "/comment", &db);
         try listener.addEndpoint(post_end.getEndpoint());
         try listener.addEndpoint(comment_end.getEndpoint());
 

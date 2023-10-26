@@ -1,9 +1,11 @@
 
 const std = @import("std");
 const zap = @import("zap");
-const Sqlite = @import("sqlite.zig");
-const Comment = @import("data.zig").Comment;
-const idFromPath = @import("util.zig").idFromPath;
+const Sqlite = @import("../sqlite.zig");
+const Data = @import("../data.zig");
+const Comment = Data.Comment;
+const CommentFull = Data.CommentFull;
+const idFromPath = @import("../util.zig").idFromPath;
 
 pub const Self = @This();
 
@@ -57,7 +59,7 @@ fn getComments(end: *zap.SimpleEndpoint, req: zap.SimpleRequest) void {
                     var arena = std.heap.ArenaAllocator.init(self.alloc);
                     defer arena.deinit();
                     var jsonbuf: [512]u8 = undefined;
-                    const comments = self.db.getComments(id, &arena) catch return .internal_server_error;
+                    const comments = self.db.getCommentsByPost(id, &arena) catch return .internal_server_error;
                     if (zap.stringifyBuf(&jsonbuf, comments, .{})) |json| {
                         r.sendJson(json) catch return .internal_server_error;
                     }
@@ -81,16 +83,20 @@ fn postComment(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
     defer arena.deinit();
     if (r.body) |body| {
         
-        var comment_ret = std.json.parseFromSlice(Comment, arena.allocator(), body, .{}) 
+        var comment_ret = std.json.parseFromSlice(CommentFull, arena.allocator(), body, .{}) 
             catch return r.setStatus(.bad_request);
-        
-        const comment = comment_ret.value;
         defer comment_ret.deinit();
-        if (comment.id != null) 
+        var comment = comment_ret.value;
+        if (comment.id != null or comment.commenter != null) 
             return r.setStatus(.bad_request);
-        
-        
-        self.db.insertComment(comment) catch return r.setStatus(.bad_request);
+        comment.commenter = self.db.insertCommenterIfNotExist(.{.email = comment.email, .username = comment.username}) catch {
+            return r.setStatus(.unauthorized);
+        };
+        self.db.insertComment(
+            .{.created_time = comment.created_time, 
+            .content = comment.content,
+            .commenter = comment.commenter,
+            .post_id = comment.post_id}) catch return r.setStatus(.bad_request);
         return r.setStatus(.ok);
     }
     r.setStatus(.bad_request);

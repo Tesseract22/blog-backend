@@ -6,9 +6,9 @@
 //! See also: `Post`
 const std = @import("std");
 const zap = @import("zap");
-const Sqlite = @import("sqlite.zig");
-const Post = @import("data.zig").Post;
-const idFromPath = @import("util.zig").idFromPath;
+const Sqlite = @import("../sqlite.zig");
+const Post = @import("../data.zig").Post;
+const idFromPath = @import("../util.zig").idFromPath;
 // an Endpoint
 
 pub const Self = @This();
