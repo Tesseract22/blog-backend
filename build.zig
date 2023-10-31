@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
     exe.addModule("zap", zap.module("zap"));
     exe.linkLibrary(zap.artifact("facil.io"));
 
-    // sqpltie3
+    // spltie3
     const sqlite = b.dependency("sqlite", .{
         .target = target,
         .optimize = optimize,

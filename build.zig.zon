@@ -1,12 +1,12 @@
 .{
     .name = "backend",
     .version = "0.0.1",
-
+    .paths = .{"src"},
     .dependencies = .{
         // zap v0.1.14-pre
         .zap = .{
-            .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.1.14-pre.tar.gz",
-            .hash = "122067d12bc7abb93f7ce623f61b94cadfdb180cef12da6559d092e6b374202acda3",
+            .url = "https://github.com/edyu/zap/archive/79fb534e805dd93b8ab3ec4a9df733bf0901055b.tar.gz",
+            .hash = "1220ddb3cf7691c7c5312c89909cd9e53dee6adbc0e6438246e25e888a898923fffe",
         },
         .sqlite = .{
             .url = "https://github.com/vrischmann/zig-sqlite/archive/19535aab5760eeaf2979a9dadfca3bb21d1594b9.tar.gz",
