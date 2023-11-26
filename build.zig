@@ -27,7 +27,8 @@ pub fn build(b: *std.Build) void {
     // b.getInstallStep().dependOn(&b.addInstallDirectory(.{
     //     .source_dir = exe.getEmittedDocs(),
     //     .install_subdir = "docs",
-    //     .install_dir = .prefix,
+    //     .install_dir 
+    //     = .prefix,
     // }).step); 
 
     // zap

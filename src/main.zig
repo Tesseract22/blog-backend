@@ -8,8 +8,31 @@ const memeql = std.mem.eql;
 
 
 fn on_request(r: zap.SimpleRequest) void {
-    
-    r.sendBody("<html><body><h1>Hello from ZAP!!!</h1></body></html>") catch return;
+    blk: {
+        const path =(r.path orelse break :blk)[1..];
+        var it = std.mem.splitScalar(u8, path, '/');
+        const sec = it.next() orelse break :blk;
+        if (std.mem.eql(u8, sec, "article")) {
+            const id = it.next() orelse "";
+            if (id.len > 0) {
+                r.sendFile(Config.PublicFolder ++ "index.html") catch break: blk;
+                return r.setStatus(.ok);
+            } else {
+                std.debug.print("redirect\n", .{});
+                return r.redirectTo("/", null) catch break: blk;
+            }
+
+            
+
+            
+
+
+        }
+        
+    }
+
+    r.sendBody("<html><body><h1>404</h1></body></html>") catch return;
+    r.setStatus(.not_found);
 }
 
 pub fn main() !void {
