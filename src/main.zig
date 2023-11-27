@@ -16,17 +16,14 @@ fn on_request(r: zap.SimpleRequest) void {
             const id = it.next() orelse "";
             if (id.len > 0) {
                 r.sendFile(Config.PublicFolder ++ "index.html") catch break: blk;
-                return r.setStatus(.ok);
+                return;
             } else {
                 std.debug.print("redirect\n", .{});
                 return r.redirectTo("/", null) catch break: blk;
             }
-
-            
-
-            
-
-
+        } else if (std.mem.eql(u8, sec, "login")) {
+            r.sendFile(Config.PublicFolder ++ "html/login.html") catch break: blk;
+            return;
         }
         
     }
