@@ -46,7 +46,7 @@ pub fn main() !void {
         var listener = zap.SimpleEndpointListener.init(
             allocator,
             .{
-                .port = 3000,
+                .port = Config.Port,
                 .on_request = on_request,
                 .log = true,
                 .public_folder = Config.PublicFolder,
