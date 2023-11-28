@@ -75,11 +75,10 @@ body {
 
 #article-index {
     position: fixed;
-    width: 20%;
     position: fixed;
     top: 2%;
     left: 12%;
-    padding: 10px;
+    margin: 10px;
     display: flex;
     flex-direction: column;
 }

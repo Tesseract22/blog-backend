@@ -20,6 +20,8 @@
 
     <link rel="stylesheet" type="text/css" href="/css/article.css">
     <link rel="stylesheet" type="text/css" href="/css/login.css">
+    <link rel="stylesheet" type="text/css" href="/css/base.css">
+
 </head>
 <body style="background-color:rgb(64,64,64);">
 
@@ -43,9 +45,24 @@
         </div>
     </nav>
     <script>
-        function submit() {
+        async function submit() {
+            warn.innerHTML = ''
             let password = document.getElementById('password').value
             console.log(password)
+            let response = await fetch("/auth", {
+                credentials: "same-origin", // include, *same-origin, omit
+                headers: {
+                Authorization: "Bearer " + password,
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            })
+            if (response.status == 200) {
+                window.location.href = "/admin"
+            } else {
+                let login = document.getElementById('login')
+                let warn = document.getElementById('warn')
+                warn.innerHTML = 'Incorrect Password!'
+            }
         }
     </script>
     <div id="login-container">  
@@ -53,6 +70,7 @@
             <input id="password" type="text" >
             <br>
             <button id="login-but" onclick="submit()">Login</button>
+            <div id="warn" style="color: red"></div>
         </div>
     </div>
 

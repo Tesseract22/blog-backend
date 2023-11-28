@@ -1,0 +1,8 @@
+@font-face {
+    font-family: HeadFont;
+    src: url("/font/Acme 9 Regular.ttf");
+}
+
+.navbar-brand{
+    font-family: HeadFont;
+}

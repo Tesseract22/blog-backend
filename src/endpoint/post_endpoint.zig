@@ -9,7 +9,7 @@ const zap = @import("zap");
 const Sqlite = @import("../sqlite.zig");
 const Post = @import("../data.zig").Post;
 const idFromPath = @import("../util.zig").idFromPath;
-const AuthRequest = @import("../util.zig").AuthRequest;
+const VerifyCookie = @import("../util.zig").VerifyCookie;
 // an Endpoint
 
 pub const Self = @This();
@@ -104,7 +104,7 @@ fn listPost(self: *Self, r: zap.SimpleRequest) !void {
 /// The jso
 fn postPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
     const self = @fieldParentPtr(Self, "endpoint", e);
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
@@ -127,7 +127,7 @@ fn postPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 }
 
 fn putPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     const self = @fieldParentPtr(Self, "endpoint", e);
     if (r.body) |body| {
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
@@ -152,7 +152,7 @@ fn putPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 
 fn deletePost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
     const self = @fieldParentPtr(Self, "endpoint", e);
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {
             self.db.deletePost(id) catch {
