@@ -15,30 +15,151 @@ let previous_scroll = 0
 let listArticle = async () => {
     // window.scrollTo(0, previous_scroll)
     let article_cont = document.getElementById("articles-container")
-    article_cont.innerHTML = '';
-    let post_meta = await fetch("/post").then((res) => res.json())
+    article_cont.style.justifyContent = 'start'
+    article_cont.innerHTML = ''
+    let menu = document.getElementById('menu')
+    menu.style.display = 'none'
 
-    let row = document.createElement("div")
-    row.className = "article-row"
-    post_meta.forEach((element, i) => {
-        if (i !== 0 && i % 2 === 0) {
-            article_cont.appendChild(row)
-            row = document.createElement("div")
-            row.className = "article-row"
-        }
+
+    let post_meta = await fetch("/post").then((res) => res.json())
+    console.log(post_meta)
+    let appendArticle = (element) => {
+        console.log(element.cover_url)
         const s = `        
         <a class="article-col" href="article/${element.id}">
-            <h2 class="article-cover" style="background-image: url('image/showcase.png');" article_id="${element.id}">
+            <h2 class="article-cover" article_id="${element.id}" id="article_${element.id}">
                 <div class="article-desc">
                     ${element.title}
                 </div>
             </h2>
         </a>`
         let article_col = DOMFromStr(s)
-
+        if (element.id < 0) {
+            article_col.style.opacity  = '0'
+        } else {
+            article_col.addEventListener('contextmenu', (ev) => {
+                ev.preventDefault()
+                menu.style.top = `${ev.pageY}px`
+                menu.style.left = `${ev.pageX}px`
+                menu.style.display = ''
+                menu.setAttribute('article_id', ev.target.getAttribute('article_id'))
+            }, false);
+        }
         article_col.addEventListener('click', route)
-        row.appendChild(article_col)
-    });
+        article_cont.appendChild(article_col)
+        if (element.cover_url) {
+            document.getElementById(`article_${element.id}`).style.backgroundImage = element.cover_url
+        } else {
+            document.getElementById(`article_${element.id}`).style.background = `crimson`
+        }
+    }
+    post_meta.forEach(appendArticle);
+
+    let add = DOMFromStr('<a class="article-col add" id="add">+</a>')
+    add.addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        console.log("insert")
+        let response = await fetch("/post", {
+            method: 'POST',
+            body: JSON.stringify({
+                title: "new title",
+                content: "Edit Me",
+                author: "cat",
+                published: 0,
+                cover_url: "",
+            })
+        })
+        let id = (await response.json()).id
+        let response2 = await fetch(`post/${id}`, {
+            method: 'PATCH'
+        })
+        if (response2.status == 200) {
+            let new_meta = await response2.json()
+            console.log(new_meta)
+            let add = article_cont.lastChild
+            appendArticle(new_meta)
+            article_cont.append(add)
+        }
+    })
+    article_cont.appendChild(add)
+
+    article_cont.onclick = () => menu.style.display = 'none'
+    document.getElementById('delete').addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        ev.stopPropagation()
+        let id = ev.target.parentElement.getAttribute('article_id')
+        let response = await fetch(`/post/${id}`, {
+            method: 'DELETE',
+        })
+        if (response.status == 200) {
+            console.log("deleteing")
+            article_cont.removeChild(document.getElementById(`article_${id}`).parentElement)
+            // listArticle()
+        }
+        menu.style.display = 'none'
+    })
+    document.getElementById('edit-title').addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        ev.stopPropagation()
+        let target = ev.target.tagName === 'INPUT' ? ev.target.parentElement.parentElement : ev.target.parentElement
+        let id = target.getAttribute('article_id')
+        let article = document.getElementById(`article_${id}`).firstElementChild
+        
+        let inp = document.createElement('input')
+        inp.type = 'text'
+        inp.className = 'edit-input'
+        inp.value = article.innerText
+        ev.target.innerHTML = ''
+        ev.target.appendChild(inp)
+
+        inp.onkeydown = async (ev2) => {
+            var keyCode = ev2.key
+            if (keyCode == 'Enter'){
+                let response = await fetch(`/post/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        title: inp.value
+                    })
+                })
+                if (response.status === 200) {
+                    article.innerHTML = inp.value
+                    ev.target.innerHTML = 'Edit Title'
+                }
+
+            }
+        }
+    })
+    document.getElementById('edit-cover').addEventListener('click', async (ev) => {
+        ev.preventDefault()
+        ev.stopPropagation()
+        let target = ev.target.tagName === 'INPUT' ? ev.target.parentElement.parentElement : ev.target.parentElement
+        let id = target.getAttribute('article_id')
+        console.log(id, target)
+        let article = document.getElementById(`article_${id}`)
+        
+        let inp = document.createElement('input')
+        inp.type = 'text'
+        inp.className = 'edit-input'
+        inp.value = article.style.backgroundImage
+        ev.target.innerHTML = ''
+        ev.target.appendChild(inp)
+
+        inp.onkeydown = async (ev2) => {
+            var keyCode = ev2.key
+            if (keyCode == 'Enter'){
+                let response = await fetch(`/post/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        cover_url: inp.value
+                    })
+                })
+                if (response.status === 200) {
+                    article.style.backgroundImage = inp.value
+                    ev.target.innerHTML = 'Edit Cover'
+                }
+            }
+        }
+    })
 }
 let indexScroll = (ev) => {
     let index = document.getElementById('article-index')
@@ -66,9 +187,15 @@ let content = ""
 let article_id = -1
 let loadArticle = async (id) => {
     article_id = id
-    let article = await (await fetch(`/post/${id}`)).json()
+    document.getElementById('menu').style.display = 'none'
+    let article = await (await fetch(`/post/${id}`)).text()
+    console.log(article)
+    article = JSON.parse(article)
     let res = article;
     let article_cont = document.getElementById("articles-container")
+    article_cont.style.justifyContent = 'center'
+    article_cont.style.flexDirection = 'column'
+    article_cont.style.alignItems = 'center'
     window.scroll(5, 0)
 
     window.onscroll = () => {
@@ -91,10 +218,11 @@ let loadArticle = async (id) => {
         <div>created: ${timeConverter(res.created_time)}, last modified: ${timeConverter(res.modified_time)}</div>
         <br></br>
         <div id="text">
-        ${content}
+        ${convertMarkdown(content)}
         </div>
     </div>`
     article_cont.innerHTML = s.trim()
+    // hljs.highlightAll()
     generateIndex()
 
     let sw = document.getElementById('edit-switch')
@@ -109,17 +237,28 @@ let loadArticle = async (id) => {
         })
         if (response.status !== 200) {
             console.warn("Cannot Save")
+        } else {
+            save.innerText = "Saved!"
         }
     }
 
     window.scrollTo(0, article_cont.offsetTop)
 }
-let covertMarkdown = (content) => {
+let convertMarkdown = (content) => {
     var converter = new showdown.Converter()
     let html = converter.makeHtml(content)
-    let html_dom = DOMFromStr(html)
-    let codes = html_dom.getElementsByTagName('code')
-    return html
+    let tmp = document.createElement('div')
+    tmp.innerHTML = html.trim()
+    let codes = tmp.getElementsByTagName('code')
+    console.log(codes)
+    for (let code of codes) {
+        // code.innerHTML = `<prse class="a11y-dark">${code.innerHTML}</pre>`
+        let pre = code.parentElement
+        pre.className = 'theme-atom-one-dark'
+        hljs.highlightElement(pre)
+        
+    }
+    return tmp.innerHTML
 }
 let generateIndex = () => {
     let index = document.getElementById("article-index")
@@ -150,10 +289,12 @@ let editArticle = (ev) => {
     if (preview) {
         index.style.display = ''
         content = text.firstElementChild.value
-        text.innerHTML = covertMarkdown(content)
+        text.innerHTML = convertMarkdown(content)
+        // hljs.highlightAll()
         generateIndex()
     } else {
         dirty = true
+        document.getElementById('save').innerText = 'Save'
         index.style.display = 'none'
         let input = DOMFromStr('<textarea type="text" id="editor"></textarea>')
         input.value = content
@@ -221,3 +362,4 @@ function DOMFromStr(s) {
     d.innerHTML = s.trim()
     return d.firstChild;
 }
+

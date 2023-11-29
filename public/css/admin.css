@@ -4,7 +4,7 @@
   width: 60px;
   height: 34px;
   align-self: flex-start;
-  margin-left: 25%;
+  margin-left: 15%;
 }
 
 .switch input { 
@@ -73,10 +73,7 @@ input:checked + .slider:before {
     border-radius: 5px;
 }
 
-code {
-    /* color: rgb(236, 196, 196); */
-    background: white;
-}
+
 
 #save {
     position: fixed;
@@ -105,3 +102,50 @@ code {
 
 
 }
+
+#menu {
+    position: absolute;
+    background-color: rgb(230, 230, 230);
+    z-index: 7;
+    width: 20vh;
+    border-radius: 4px;
+}
+.menu-item {
+    padding: 1vh;
+    float: left;
+    height: 5vh;
+    border-bottom: 1px solid #293649;
+    position: relative;
+    width: 100%;
+    transition: text-indent 0.15s, height 0.3s;
+    box-sizing: border-box;
+    padding: 0;
+}
+.menu-item:hover {
+        box-shadow: #000007 5px 5px 5px 1px;
+}
+
+.edit-input {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+
+}
+
+.add {
+    /* opacity: 0; */
+    line-height: 45vh;
+    text-align: center;
+    background: rgba(0, 0, 0, 0);
+    border: dotted;
+    border-color: grey;
+    border-width: 10px;
+    font-size: 10vh;
+    color: grey;
+    text-decoration: none !important;
+}
+.add:hover {
+    border-color:darkblue
+}
+

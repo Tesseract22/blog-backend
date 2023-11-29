@@ -28,6 +28,7 @@ const SubPath = enum {
 };
 var rand = std.rand.DefaultPrng.init(0);
 fn on_request(r: zap.SimpleRequest) void {
+    std.log.info("here", .{});
     blk: {
         const path =(r.path orelse break :blk)[1..];
         var it = std.mem.splitScalar(u8, path, '/');

@@ -15,30 +15,31 @@ let previous_scroll = 0
 let listArticle = async () => {
     // window.scrollTo(0, previous_scroll)
     let article_cont = document.getElementById("articles-container")
-    article_cont.innerHTML = '';
-    let post_meta = await fetch("/post").then((res) => res.json()).catch((err) => console.log(err))
+    article_cont.style.justifyContent = 'start'
 
-    let row = document.createElement("div")
-    row.className = "article-row"
+    article_cont.innerHTML = '';
+    let post_meta = await fetch("/post").then((res) => res.json())
+    console.log(post_meta)
     post_meta.forEach((element, i) => {
-        if (i !== 0 && i % 2 === 0) {
-            article_cont.appendChild(row)
-            row = document.createElement("div")
-            row.className = "article-row"
-        }
         const s = `        
         <a class="article-col" href="article/${element.id}">
-            <h2 class="article-cover" style="background-image: url('image/showcase.png');" article_id="${element.id}">
+            <h2 class="article-cover" style="background-image: url('image/showcase.png');" article_id="${element.id}" id="article_${element.id}">
                 <div class="article-desc">
                     ${element.title}
                 </div>
             </h2>
         </a>`
         let article_col = DOMFromStr(s)
-
+        if (element.id < 0) {
+            article_col.style.opacity  = '0'
+        }
         article_col.addEventListener('click', route)
-        row.appendChild(article_col)
+        article_cont.appendChild(article_col)
     });
+
+
+
+
 }
 let indexScroll = (ev) => {
     let index = document.getElementById('article-index')
@@ -54,11 +55,28 @@ let indexScroll = (ev) => {
         index.style.top = pad_str
     }
 }
+let convertMarkdown = (content) => {
+    var converter = new showdown.Converter()
+    let html = converter.makeHtml(content)
+    let tmp = document.createElement('div')
+    tmp.innerHTML = html.trim()
+    let codes = tmp.getElementsByTagName('code')
+    console.log(codes)
+    for (let code of codes) {
+        // code.innerHTML = `<prse class="a11y-dark">${code.innerHTML}</pre>`
+        let pre = code.parentElement
+        hljs.highlightElement(pre)
+        
+    }
+    return tmp.innerHTML
+}
 let loadArticle = async (id) => {
+
     const path = `post/${id}`;
     let article = await (await fetch(`/post/${id}`)).json()
     let res = article;
     let article_cont = document.getElementById("articles-container")
+    article_cont.style.justifyContent = 'center'
     window.scroll(5, 0)
     indexScroll()   
     window.onscroll = indexScroll
@@ -70,7 +88,7 @@ let loadArticle = async (id) => {
         <div>views: ${res.views}</div>
         <div>created: ${timeConverter(res.created_time)}, last modified: ${timeConverter(res.modified_time)}</div>
         <br></br>
-        ${res.content}
+        ${convertMarkdown(res.content)}
     </div>`
     article_cont.innerHTML = s.trim()
     let index = document.getElementById("article-index")

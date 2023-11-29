@@ -30,16 +30,26 @@ pub fn deinit(self: *Sqlite) void {
 // POST SCHEMA:
 // ID, CREATE_TIME, MODIFIED_TIME, TITLE, CONTENT, VIEWS, AUTHOR
 
-pub fn insertPost(self: *Sqlite, post: Post) !void {
+pub fn insertPost(self: *Sqlite, post: Post) !usize {
     std.debug.assert(post.id == null);
     const q = 
         \\ INSERT INTO POST 
-        \\  (CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, ROWID) 
-        \\  values (?, ?, ?, ?, ?, ?, ?)
+        \\  (CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, PUBLISHED, COVER_URL, ROWID) 
+        \\  values (
+        \\          coalesce(?, strftime('%s', 'now')), 
+        \\          coalesce(?, strftime('%s', 'now')), 
+        \\          ?, 
+        \\          coalesce(?, 0), 
+        \\          ?,
+        \\          ?,
+        \\          ?, 
+        \\          ?, 
+        \\          ?)
+        \\ RETURNING ROWID
     ;
     var stmt = try self.db.prepare(q);
     defer stmt.deinit();
-    try stmt.exec(.{}, post);
+    return (try stmt.one(usize, .{}, post)) orelse unreachable;
     
 
 }
@@ -59,7 +69,8 @@ pub fn deletePost(self: *Sqlite, id: usize) !void {
 
 pub fn listPost(self: *Sqlite, arena: *Arena) ![]Post {
     const q = 
-        \\ SELECT *, ROWID FROM POST
+        \\ SELECT 
+        \\ CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
@@ -72,7 +83,7 @@ pub fn getPostMeta(self: *Sqlite, id: usize, arena: *Arena) !?Post {
 
     const q = 
         \\ SELECT 
-        \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, ROWID FROM POST 
+        \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST 
         \\  WHERE ROWID = ?
     ;
     var stmt = self.db.prepare(q) catch unreachable; 
@@ -85,7 +96,7 @@ pub fn getPostMeta(self: *Sqlite, id: usize, arena: *Arena) !?Post {
 pub fn getPost(self: *Sqlite, id: usize, arena: *Arena) !?Post {
     const q = 
         \\ SELECT 
-        \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, ROWID FROM POST 
+        \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, PUBLISHED, COVER_URL, ROWID FROM POST 
         \\  WHERE ROWID = ?
     ;
     var stmt = self.db.prepare(q) catch unreachable;
@@ -100,11 +111,13 @@ pub fn updatePost(self: *Sqlite, post: Post) !void {
         \\UPDATE POST
         \\SET  
         \\  CREATED_TIME = coalesce(?, CREATED_TIME), 
-        \\  MODIFIED_TIME = coalesce(?, MODIFIED_TIME), 
+        \\  MODIFIED_TIME = coalesce(?, strftime('%s', 'now')), 
         \\  TITLE = coalesce(?, TITLE), 
         \\  VIEWS = coalesce(?, VIEWS), 
         \\  AUTHOR = coalesce(?, AUTHOR), 
-        \\  CONTENT = coalesce(?, CONTENT) 
+        \\  CONTENT = coalesce(?, CONTENT),
+        \\  PUBLISHED = coalesce(?, PUBLISHED),
+        \\  COVER_URL =  coalesce(?, COVER_URL)
         \\  WHERE ROWID = ?
     ;
     var stmt = self.db.prepare(q) catch unreachable;
