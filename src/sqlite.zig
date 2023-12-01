@@ -5,7 +5,6 @@ const Post = data.Post;
 const Comment = data.Comment;
 const Commenter = data.Commenter;
 const Arena = std.heap.ArenaAllocator;
-pub const PATH = "test.db";
 const Sqlite = @This();
 db: sqlite.Db,
 pub fn init() !Sqlite {
@@ -13,7 +12,7 @@ pub fn init() !Sqlite {
     var res = Sqlite {.db = undefined};
 
     res.db = try sqlite.Db.init(.{
-        .mode = sqlite.Db.Mode{ .File = PATH },
+        .mode = sqlite.Db.Mode{ .File = @import("config.zig").DbPath },
         .open_flags = .{
             .write = true,
             .create = true,

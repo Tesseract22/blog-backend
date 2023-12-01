@@ -221,8 +221,9 @@ let loadArticle = async (id) => {
         ${convertMarkdown(content)}
         </div>
     </div>`
+
     article_cont.innerHTML = s.trim()
-    // hljs.highlightAll()
+    hljs.highlightAll()
     generateIndex()
 
     let sw = document.getElementById('edit-switch')
@@ -251,13 +252,6 @@ let convertMarkdown = (content) => {
     tmp.innerHTML = html.trim()
     let codes = tmp.getElementsByTagName('code')
     console.log(codes)
-    for (let code of codes) {
-        // code.innerHTML = `<prse class="a11y-dark">${code.innerHTML}</pre>`
-        let pre = code.parentElement
-        pre.className = 'theme-atom-one-dark'
-        hljs.highlightElement(pre)
-        
-    }
     return tmp.innerHTML
 }
 let generateIndex = () => {
@@ -290,7 +284,7 @@ let editArticle = (ev) => {
         index.style.display = ''
         content = text.firstElementChild.value
         text.innerHTML = convertMarkdown(content)
-        // hljs.highlightAll()
+        hljs.highlightAll()
         generateIndex()
     } else {
         dirty = true
