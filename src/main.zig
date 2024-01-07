@@ -131,7 +131,7 @@ pub fn main() !void {
 
         // and run
         zap.start(.{
-            .threads = 2000,
+            .threads = 100,
             .workers = 1,
         });
     }
