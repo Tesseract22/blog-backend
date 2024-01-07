@@ -2,7 +2,10 @@ const builtin = @import("builtin");
 pub const PublicFolder = "public/";
 pub const ImageFolder = "image/";
 pub const AuthFile = "auth";
-pub const Auth = "Bearer " ++ @embedFile(AuthFile);
+const fmt = @import("std").fmt;
+pub const AuthPrefix = "Bearer ";
+pub const Auth = fmt.parseInt(u64, @embedFile(AuthFile), 16) 
+    catch @compileError(AuthFile ++ " must be a hex number"); 
 pub const Port = switch (builtin.mode) {
     .Debug => 3300,
     else => 3000,

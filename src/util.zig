@@ -17,7 +17,9 @@ pub var SessionCookie: ?u64 = null;
 pub fn AuthRequest(r: zap.SimpleRequest) bool {
     // zap.BearerAuthSingle.authenticateRequest(self: *Self, r: *const zap.SimpleRequest)
     const auth_header = r.getHeader("authorization") orelse return false;
-    return std.mem.eql(u8, auth_header, Config.Auth);
+    if (!std.mem.startsWith(u8, auth_header, Config.AuthPrefix)) return false;
+    const hash = std.hash_map.hashString(auth_header[Config.AuthPrefix.len..]);
+    return hash == Config.Auth;
 }
 
 pub fn GetSessionCookie(r: zap.SimpleRequest) ?u64 {
