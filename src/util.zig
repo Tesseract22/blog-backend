@@ -41,4 +41,3 @@ pub fn VerifyCookie(r: zap.SimpleRequest) bool {
     const sc = SessionCookie orelse return false;
     return c == sc;
 }
-
