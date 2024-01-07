@@ -25,10 +25,10 @@ pub fn GetSessionCookie(r: zap.SimpleRequest) ?u64 {
     var buf = [_]u8 {0} ** 256;
     var fba = std.heap.FixedBufferAllocator.init(&buf);
     var cookie_wrap = r.getCookieStr(Config.AdminCookieName, fba.allocator(), false) catch |e| {
-        std.debug.print("Cookie Allocation Failed: {any}\n", .{e});
+        std.log.err("Cookie Allocation Failed: {any}\n", .{e});
         return null;
     } orelse {
-        std.debug.print("Not Cookie named `" ++ Config.AdminCookieName ++ "`\n", .{});
+        std.log.err("No Cookie named `" ++ Config.AdminCookieName ++ "`\n", .{});
         return null;
     };
     defer cookie_wrap.deinit();

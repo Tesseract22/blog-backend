@@ -7,6 +7,6 @@ pub const Port = switch (builtin.mode) {
     .Debug => 3300,
     else => 3000,
 };
-pub const Domain = "tesseract.cat";
+pub const Domain = "tesseract-cat.com";
 pub const AdminCookieName = "admin-cookie";
 pub const DbPath = if (builtin.mode == .Debug) "test.db" else "blog.db";

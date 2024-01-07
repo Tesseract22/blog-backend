@@ -28,7 +28,6 @@ const SubPath = enum {
 };
 var rand = std.rand.DefaultPrng.init(0);
 fn on_request(r: zap.SimpleRequest) void {
-    std.log.info("here", .{});
     blk: {
         const path =(r.path orelse break :blk)[1..];
         var it = std.mem.splitScalar(u8, path, '/');
@@ -76,7 +75,7 @@ fn on_request(r: zap.SimpleRequest) void {
             },
             .admin => {
                 const cookie_count = r.getCookiesCount();
-                std.log.info("cookie_count: {}", .{cookie_count});
+                std.log.debug("cookie_count: {}", .{cookie_count});
 
                 // iterate over all cookies as strings
 
