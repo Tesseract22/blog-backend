@@ -256,7 +256,7 @@ let dirty = false
 let loadArticle = async (id: string | number, callback?: (post: Post, id: string | number) => void) => {
     getMenu().style.display = 'none'
     let article = await (await fetch(`/post/${id}`)).text()
-    console.log(article)
+    console.log("article:",article)
     let res: Post = JSON.parse(article)
     let article_cont = document.getElementById("articles-container")!
     article_cont.style.justifyContent = 'center'
@@ -264,12 +264,28 @@ let loadArticle = async (id: string | number, callback?: (post: Post, id: string
     article_cont.style.alignItems = 'center'
     window.scroll(5, 0)
 
-
+    let s =         
+    `        
+    <div id="article-index"></div>
+    <div id="article-content">
+        <h1 id="article-title">${res.title}</h1>
+        <div>views: ${res.views}</div>
+        <div>created: ${timeConverter(res.created_time!)}, last modified: ${timeConverter(res.modified_time!)}</div>
+        <br></br>   
+        <div id="text">
+        ${convertMarkdown(res.content)}
+        </div>
+    </div>`
+    article_cont.innerHTML = s.trim()
+    hljs.highlightAll()
+    generateIndex()
     window.onscroll = () => {
         indexScroll(null)
     }
     indexScroll(null)
-    callback!(res, id)
+    if (callback) {
+        callback(res, id)
+    }
 
 
     window.scrollTo(0, article_cont.offsetTop)

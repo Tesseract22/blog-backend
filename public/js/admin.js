@@ -66,25 +66,14 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
                 console.log("loadArticle callback");
                 content = res.content;
                 let article_cont = getArticlesContainer();
-                let s = `        
+                let switch_s = `        
                 <label class="switch">
                     <input type="checkbox">
                     <span class="slider"  id="edit-switch"></span>
-                </label>
-                <button id='save'>Save</button>
-                <div id="article-index"></div>
-                <div id="article-content">
-                    <h1 id="article-title">${res.title}</h1>
-                    <div>views: ${res.views}</div>
-                    <div>created: ${timeConverter(res.created_time)}, last modified: ${timeConverter(res.modified_time)}</div>
-                    <br></br>
-                    <div id="text">
-                    ${convertMarkdown(content)}
-                    </div>
-                </div>`;
-                article_cont.innerHTML = s.trim();
-                hljs.highlightAll();
-                generateIndex();
+                </label>`;
+                let save_s = `<button id='save'>Save</button>`;
+                article_cont.appendChild(DOMFromStr(switch_s));
+                article_cont.appendChild(DOMFromStr(save_s));
                 let sw = document.getElementById('edit-switch');
                 sw.onclick = editArticle;
                 let save = document.getElementById('save');
