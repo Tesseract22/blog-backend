@@ -27,6 +27,8 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     article_cont.innerHTML = '';
     let menu = getMenu();
     menu.style.display = 'none';
+    let editing_title = false;
+    let editing_cover = false;
     let post_meta = yield fetch("/post").then((res) => res.json());
     let appendArticle = (post) => {
         console.log(post.cover_url);
@@ -48,14 +50,24 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                 menu.style.top = `${ev.pageY}px`;
                 menu.style.left = `${ev.pageX}px`;
                 menu.style.display = '';
-                menu.setAttribute('article_id', ev.target.getAttribute('article_id'));
+                let old_id = menu.getAttribute('article_id') || -1;
+                let new_id = ev.target.getAttribute('article_id');
+                menu.setAttribute('article_id', new_id);
+                let orignal_txt = ["Delete", "Edit Title", "Edit Cover"];
+                if (old_id !== new_id) {
+                    for (var i = 0, len = menu.childElementCount; i < len; ++i) {
+                        menu.children[i].innerHTML = orignal_txt[i];
+                    }
+                    editing_cover = false;
+                    editing_title = false;
+                }
             }, false);
         }
         article_col.addEventListener('click', route);
         article_cont.appendChild(article_col);
         const background_el = article_col.firstElementChild;
         if (post.cover_url) {
-            background_el.style.backgroundImage = post.cover_url;
+            background_el.style.backgroundImage = Url2Css(post.cover_url);
         }
         else {
             background_el.style.background = `crimson`;
@@ -98,6 +110,7 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         el.addEventListener('click', (ev) => __awaiter(this, void 0, void 0, function* () {
             ev.preventDefault();
             ev.stopPropagation();
+            console.log("one of the menu item is clicked");
             let article_id = menu.getAttribute('article_id');
             callback(article_id, el);
         }));
@@ -113,6 +126,9 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         }
     }));
     addMenuItem('edit-title', (id, target) => __awaiter(this, void 0, void 0, function* () {
+        if (editing_title)
+            return;
+        editing_title = true;
         let article_title_el = getArticleTitle(id);
         let inp = document.createElement('input');
         inp.type = 'text';
@@ -133,16 +149,20 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                 if (response.status === 200) {
                     article_title_el.innerText = inp.value;
                     target.innerHTML = 'Edit Title';
+                    editing_title = false;
                 }
             }
         });
     }));
     addMenuItem('edit-cover', (id, target) => __awaiter(this, void 0, void 0, function* () {
+        if (editing_cover)
+            return;
+        editing_cover = true;
         let article_bg_el = getArticleCover(id);
         let inp = document.createElement('input');
         inp.type = 'text';
         inp.className = 'edit-input';
-        inp.value = article_bg_el.style.backgroundImage;
+        inp.value = Css2Url(article_bg_el.style.backgroundImage);
         target.innerHTML = '';
         target.appendChild(inp);
         inp.onkeydown = (ev2) => __awaiter(this, void 0, void 0, function* () {
@@ -155,13 +175,20 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                     })
                 });
                 if (response.status === 200) {
-                    article_bg_el.style.backgroundImage = inp.value;
+                    article_bg_el.style.backgroundImage = Url2Css(inp.value);
                     target.innerHTML = 'Edit Cover';
+                    editing_cover = false;
                 }
             }
         });
     }));
 });
+let Url2Css = (u) => {
+    return `url("${u}")`;
+};
+let Css2Url = (c) => {
+    return c.substring(5, c.length - 2);
+};
 let indexScroll = (ev) => {
     let index = getArticleIndex();
     let article_cont = getArticlesContainer();
