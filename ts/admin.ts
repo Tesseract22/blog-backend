@@ -1,5 +1,5 @@
 /// <reference path="common.ts"/>
-let editArticle = (ev) => {
+let editArticle = (ev: MouseEvent) => {
     ev.stopPropagation()
     preview = !preview
     let text = document.getElementById('text')!

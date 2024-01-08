@@ -24,6 +24,8 @@ function timeConverter(UNIX_timestamp) {
 let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     let article_cont = document.getElementById("articles-container");
     article_cont.style.justifyContent = 'start';
+    article_cont.style.flexDirection = 'row';
+    article_cont.style.alignItems = 'center';
     article_cont.innerHTML = '';
     let menu = getMenu();
     menu.style.display = 'none';
@@ -250,7 +252,7 @@ let loadArticle = (id, callback) => __awaiter(this, void 0, void 0, function* ()
         <h1 id="article-title">${res.title}</h1>
         <div>views: ${res.views}</div>
         <div>created: ${timeConverter(res.created_time)}, last modified: ${timeConverter(res.modified_time)}</div>
-        <br></br>
+        <br></br>   
         <div id="text">
         ${convertMarkdown(res.content)}
         </div>

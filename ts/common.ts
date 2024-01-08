@@ -30,6 +30,8 @@ function timeConverter(UNIX_timestamp: number): string {
 let listArticle = async (admin: boolean) => {
     let article_cont = document.getElementById("articles-container")!
     article_cont.style.justifyContent = 'start'
+    article_cont.style.flexDirection = 'row'
+    article_cont.style.alignItems = 'center'
     article_cont.innerHTML = ''
 
     let menu = getMenu()
