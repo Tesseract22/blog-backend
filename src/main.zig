@@ -35,6 +35,7 @@ fn on_request(r: zap.SimpleRequest) void {
         const match = SubPath.match(sec) orelse break :blk;
         switch (match.keyword) {
             .article => {
+                std.log.info("{s}", .{r.getHeader("X-Forwarded-For") orelse "Not header named X-Forwarded-For"});
                 const id = it.next() orelse "";
                 if (id.len > 0) {
                     r.sendFile(Config.PublicFolder ++ "index.html") catch break: blk;
@@ -85,6 +86,7 @@ fn on_request(r: zap.SimpleRequest) void {
                 }
                 return r.sendFile(Config.PublicFolder ++ "html/admin.html") catch break: blk;
             }
+            
         }
         
     }
