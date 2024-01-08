@@ -105,7 +105,7 @@ let listArticle = async (admin: boolean) => {
         el.addEventListener('click', async (ev) => {
             ev.preventDefault()
             ev.stopPropagation()
-            let article_id = (ev.target! as HTMLElement).parentElement!.getAttribute('article_id')!
+            let article_id = menu.getAttribute('article_id')!
             callback(article_id, el)
         })
     }

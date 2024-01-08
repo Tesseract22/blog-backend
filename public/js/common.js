@@ -98,7 +98,7 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         el.addEventListener('click', (ev) => __awaiter(this, void 0, void 0, function* () {
             ev.preventDefault();
             ev.stopPropagation();
-            let article_id = ev.target.parentElement.getAttribute('article_id');
+            let article_id = menu.getAttribute('article_id');
             callback(article_id, el);
         }));
     };

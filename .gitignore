@@ -3,4 +3,3 @@ zig-out
 .vscode
 src/auth
 blog.db
-public/js
