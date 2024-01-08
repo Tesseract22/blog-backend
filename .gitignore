@@ -4,3 +4,4 @@ zig-out
 src/auth
 blog.db
 update.sh
+blog_rsa
