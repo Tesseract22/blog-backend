@@ -55,7 +55,7 @@ fn trimPath(path: []const u8) []const u8 {
 /// GET /post => []post
 /// else => bad_request
 fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
-    
+        const ip_maybe = r.getHeader("x-real-ip");
         const self = @fieldParentPtr(Self, "endpoint", e);
         var aa = std.heap.ArenaAllocator.init(self.alloc);
         defer aa.deinit();
@@ -76,7 +76,7 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
             catch return r.setStatus(.internal_server_error);
         r.sendJson(json) catch return r.setStatus(.internal_server_error);
         // storing ip
-        const ip_str = r.getHeader("x-real-ip") 
+        const ip_str = ip_maybe
             orelse return std.log.warn("No header named \"x-real-ip\"", .{});
         const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
             catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
@@ -86,7 +86,6 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
         self.db.insertIpMap(ip_id, post_id) 
             catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
         
-
 }
 
 fn listPost(self: *Self, r: zap.SimpleRequest) !void {
