@@ -87,6 +87,8 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
             catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
         self.db.insertIpMap(ip_id, post_id) 
             catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
+        self.db.updatePostViews(post_id, 1)
+            catch |err| return std.log.warn("{any} Unexpected Error while incrementing post {} views", .{post_id, err});
         
 }
 

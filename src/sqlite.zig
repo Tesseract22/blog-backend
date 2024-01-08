@@ -124,6 +124,15 @@ pub fn updatePost(self: *Sqlite, post: Post) !void {
     try stmt.exec(.{}, post);
 }
 
+pub fn updatePostViews(self: *Sqlite, id: usize, increment: usize) !void {
+    const q = 
+        \\ UPDATE POST SET VIEWS = VIEWS + ? WHERE ROWID = ?
+        ;
+    var stmt = self.db.prepare(q) catch unreachable;
+    defer stmt.deinit();
+    try stmt.exec(.{}, .{increment, id});
+}
+
 pub fn getCommentsByPost(self: *Sqlite, post_id: usize, arena: *Arena) ![]data.CommentFull {
     const q = 
         \\SELECT COMMENT.*,COMMENTER.USERNAME,COMMENT.ROWID
@@ -249,4 +258,6 @@ pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize) !void {
     defer stmt.deinit();
     return stmt.exec(.{}, .{ip_id, post_id});
 }
+
+
 
