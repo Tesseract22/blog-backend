@@ -38,5 +38,20 @@ pub fn build(b: *std.Build) !void {
     exe.linkLibrary(sqlite.artifact("sqlite"));
 
 
+    var tsc_exe = b.addSystemCommand(&.{"tsc"});
+    tsc_exe.addArgs(&.{
+        "ts/admin.ts", "ts/common.ts", "--outDir", "public/js", "--target", "ES6"
+    });
+    var tsc_exe2 = b.addSystemCommand(&.{"tsc"});
+    tsc_exe2.addArgs(&.{
+        "ts/article.ts", "ts/common.ts", "--outDir", "public/js", "--target", "ES6"
+    });
+    const tsc_step = b.step("tsc", "compile ts/*.ts -> public/js/*.js");
+    tsc_step.dependOn(&tsc_exe2.step);
+    tsc_step.dependOn(&tsc_exe.step);
+
+    
+
+
     b.installArtifact(exe);
 }
