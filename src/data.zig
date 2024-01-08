@@ -7,8 +7,9 @@ pub const Post = struct {
     views: ?usize = null,
     author: ?[]const u8 = null,
     content: ?[]const u8 = null,
+    published: ?i32 = null,
+    cover_url: ?[]const u8 = null,
     id: ?usize = null, // set to null to use AUTOINCREMENT in sqlite
-
     pub fn format(
         self: Post,
         comptime fmt: []const u8,

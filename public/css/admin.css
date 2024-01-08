@@ -1,0 +1,151 @@
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  align-self: flex-start;
+  margin-left: 15%;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  box-shadow: #000007 5px 5px 5px 1px;
+  box-sizing: border-box;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+#editor {
+    width: 100%;
+    min-height: 100vh;
+    resize: none;
+    background-color: #0e001a;
+    color: white;
+    outline: none;
+    border-style: solid;
+    border-radius: 5px;
+}
+
+
+
+#save {
+    position: fixed;
+    position: fixed;
+    top: 1%;
+    left: 12%;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    width: 6%;
+    height: 4%;
+    border-radius: 10px;
+    text-align: center;
+    display: table-cell;
+
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    border-style: none;
+    box-sizing: border-box;
+    background-color: #5E5DF0;
+
+    box-shadow: #000007 5px 5px 5px 1px;
+    box-sizing: border-box;
+
+
+}
+
+#menu {
+    position: absolute;
+    background-color: rgb(230, 230, 230);
+    z-index: 7;
+    width: 20vh;
+    border-radius: 4px;
+}
+.menu-item {
+    padding: 1vh;
+    float: left;
+    height: 5vh;
+    border-bottom: 1px solid #293649;
+    position: relative;
+    width: 100%;
+    transition: text-indent 0.15s, height 0.3s;
+    box-sizing: border-box;
+    padding: 0;
+}
+.menu-item:hover {
+        box-shadow: #000007 5px 5px 5px 1px;
+}
+
+.edit-input {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+
+}
+
+.add {
+    /* opacity: 0; */
+    line-height: 45vh;
+    text-align: center;
+    background: rgba(0, 0, 0, 0);
+    border: dotted;
+    border-color: grey;
+    border-width: 10px;
+    font-size: 10vh;
+    color: grey;
+    text-decoration: none !important;
+}
+.add:hover {
+    border-color:darkblue
+}
+

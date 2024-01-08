@@ -9,7 +9,7 @@ const zap = @import("zap");
 const Sqlite = @import("../sqlite.zig");
 const Post = @import("../data.zig").Post;
 const idFromPath = @import("../util.zig").idFromPath;
-const AuthRequest = @import("../util.zig").AuthRequest;
+const VerifyCookie = @import("../util.zig").VerifyCookie;
 // an Endpoint
 
 pub const Self = @This();
@@ -30,7 +30,7 @@ pub fn init(
             .get = getPost,
             .post = postPost,
             .put = putPost,
-            .patch = putPost,
+            .patch = patchPost,
             .delete = deletePost,
         }),
     };
@@ -72,12 +72,12 @@ fn getPost(end: *zap.SimpleEndpoint, req: zap.SimpleRequest) void {
         
 
                 if (self.postIdFromPath(path_trim)) |id| {
-                    var jsonbuf: [512]u8 = undefined;
-                    const post = (self.db.getPost(id, &aa)  catch return .internal_server_error) 
-                                                                            orelse return .not_found;
-                    if (zap.stringifyBuf(&jsonbuf, post, .{})) |json| {
-                        r.sendJson(json) catch return .internal_server_error;
-                    }
+                    const post = (self.db.getPost(id, &aa)  
+                        catch return .internal_server_error) 
+                        orelse return .not_found;
+                    const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) 
+                        catch return .internal_server_error;
+                    r.sendJson(json) catch return .internal_server_error;
 
                 }
                 return .ok;
@@ -104,22 +104,23 @@ fn listPost(self: *Self, r: zap.SimpleRequest) !void {
 /// The jso
 fn postPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
     const self = @fieldParentPtr(Self, "endpoint", e);
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
-            std.log.debug("here 1", .{});
+            std.log.err("Cannot Parse Json: {s}", .{body});
             return r.setStatus(.bad_request);
-        };        
+        }; 
         defer post.deinit();
         if (post.value.id != null) {
             return r.setStatus(.bad_request);
         }
         
-        defer post.deinit();
-        self.db.insertPost(post.value) catch {
-            return r.setStatus(.bad_request);
+        const id = self.db.insertPost(post.value) catch {
+            return r.setStatus(.internal_server_error);
         };
+        var buf = [_]u8 {0} ** 64;
+        r.sendJson(zap.stringifyBuf(&buf, .{.id=id}, .{}).?) catch return r.setStatus(.internal_server_error);
         return r.setStatus(.ok);
     }
     r.setStatus(.bad_request);
@@ -127,34 +128,50 @@ fn postPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 }
 
 fn putPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     const self = @fieldParentPtr(Self, "endpoint", e);
     if (r.body) |body| {
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
-            std.log.debug("here 1", .{});
+            std.log.err("Cannot parsed json {s}", .{body});
             return r.setStatus(.bad_request);
         };        
         defer post.deinit();
-        const id = self.postIdFromPath(trimPath(r.path orelse ""));
-        if ((id == null and post.value.id == null) and id != post.value.id) return r.setStatus(.bad_request);
-        post.value.id = post.value.id orelse id;
+        const id = self.postIdFromPath(trimPath(r.path orelse "")) orelse return r.setStatus(.bad_request);
+        post.value.id = id;
         self.db.updatePost(post.value) catch {
             r.setStatus(.internal_server_error);
             return;
         };
         r.setStatus(.ok);
     } else {
-         std.log.debug("here 3", .{});
+        std.log.err("No body", .{});
         r.setStatus(.bad_request);
     }
 
 }
 
-fn deletePost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+fn patchPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+
     const self = @fieldParentPtr(Self, "endpoint", e);
-    if (!AuthRequest(r)) return r.setStatus(.unauthorized);
+    var arena = std.heap.ArenaAllocator.init(self.alloc);
+    defer arena.deinit();
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {
+            const post = (self.db.getPostMeta(id, &arena) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
+            var jsonbuf: [512]u8 = undefined;
+            if (zap.stringifyBuf(&jsonbuf, post, .{})) |json| {
+                r.sendJson(json) catch return r.setStatus(.internal_server_error);
+            }
+        }
+    }
+}
+
+fn deletePost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+    const self = @fieldParentPtr(Self, "endpoint", e);
+    if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
+    if (r.path) |path| {
+        if (self.postIdFromPath(path)) |id| {
+            std.log.debug("delete: {}", .{id});
             self.db.deletePost(id) catch {
                 r.setStatus(.bad_request);
                 return;

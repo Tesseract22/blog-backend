@@ -22,6 +22,7 @@ pub fn init(
         .endpoint = zap.SimpleEndpoint.init(.{
             .path = user_path,
             .post = postImage,
+            .get = getImage,
         }),
         .id = std.Thread.getCurrentId(),
     };
@@ -105,4 +106,16 @@ fn postImage(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
         }
     }
 
+}
+
+
+fn getImage(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
+    _ = e;
+    std.log.debug("getImage", .{});
+    const path = r.path orelse return r.setStatus(.not_found);
+    const ext = std.fs.path.extension(path);
+    const name = path[0..path.len-ext.len];
+    std.log.info("{s} {s}", .{name, ext});
+    if (!std.mem.eql(u8, ext, ".webp")) return r.setStatus(.not_found);
+    return;
 }
