@@ -55,10 +55,17 @@ fn trimPath(path: []const u8) []const u8 {
 /// GET /post => []post
 /// else => bad_request
 fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
-        const ip_maybe = r.getHeader("x-real-ip");
         const self = @fieldParentPtr(Self, "endpoint", e);
         var aa = std.heap.ArenaAllocator.init(self.alloc);
         defer aa.deinit();
+
+        const ip_str = r.getHeader("x-real-ip") 
+            orelse return std.log.warn("No header named \"x-real-ip\"", .{});
+        const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
+            catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
+        std.log.warn("ip: {}", .{ip_addr});
+
+
         const path = r.path orelse return r.setStatus(.bad_request);
             // /users
         const path_trim = trimPath(path);
@@ -76,11 +83,6 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
             catch return r.setStatus(.internal_server_error);
         r.sendJson(json) catch return r.setStatus(.internal_server_error);
         // storing ip
-        const ip_str = ip_maybe
-            orelse return std.log.warn("No header named \"x-real-ip\"", .{});
-        const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
-            catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
-        std.log.warn("ip: {}", .{ip_addr});
         const ip_id = self.db.insertIpAddr(ip_addr.sa.addr)
             catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
         self.db.insertIpMap(ip_id, post_id) 
