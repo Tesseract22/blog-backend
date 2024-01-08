@@ -1,6 +1,4 @@
 /// <reference path="common.ts"/>
-
-
 let editArticle = (ev) => {
     ev.stopPropagation()
     preview = !preview
@@ -42,6 +40,7 @@ const route = (event) => {
 //     "/about": "/pages/about.html",
 //     "/lorem": "/pages/lorem.html",
 // };
+let content = ""
 
 const handleLocation = async () => {
     const path_ = window.location.pathname;
@@ -52,7 +51,6 @@ const handleLocation = async () => {
         return await listArticle(true)
     }
     let match = (/^\/article\/(\d+)$/.exec(path) || [-1,-1])
-    console.log(match, path)
     let article_id = match[1] as number
     let jump_id = window.location.hash
     console.log(jump_id)
@@ -61,6 +59,8 @@ const handleLocation = async () => {
             scrollTo(0, document.getElementById(jump_id)!.offsetTop)
         } else {
             return loadArticle(article_id, (res: Post, id: string | number) => {
+                console.log("loadArticle callback")
+                content = res.content!
                 let article_cont = getArticlesContainer()
                 let s =         
                 `        

@@ -219,7 +219,6 @@ let generateIndex = () => {
     }
 }
 
-let content = ""
 let preview = true
 let article_id = -1
 let dirty = false
