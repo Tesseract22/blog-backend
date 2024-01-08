@@ -106,7 +106,10 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         }
     }));
     article_cont.appendChild(add);
-    article_cont.onclick = () => menu.style.display = 'none';
+    getArticlesBg().onclick = (ev) => {
+        console.log("fired");
+        menu.style.display = 'none';
+    };
     // context menu for editing article
     let addMenuItem = (id, callback) => {
         let el = document.getElementById(id);
@@ -270,6 +273,9 @@ let loadArticle = (id, callback) => __awaiter(this, void 0, void 0, function* ()
     }
     window.scrollTo(0, article_cont.offsetTop);
 });
+let getArticlesBg = () => {
+    return document.getElementById("article-background");
+};
 let getArticleCover = (id) => {
     return document.getElementById(`article_${id}`);
 };

@@ -115,7 +115,10 @@ let listArticle = async (admin: boolean) => {
         }
     })
     article_cont.appendChild(add)
-    article_cont.onclick = () => menu.style.display = 'none'
+    getArticlesBg().onclick = (ev) => {
+        console.log("fired")
+        menu.style.display = 'none'
+    }
     // context menu for editing article
     let addMenuItem = (id: string, callback: (article_id: string, target: HTMLElement) => void) => {
         let el = document.getElementById(id)!
@@ -295,7 +298,9 @@ let loadArticle = async (id: string | number, callback?: (post: Post, id: string
 }
 
 
-
+let getArticlesBg = () => {
+    return document.getElementById("article-background")!
+}
 
 let getArticleCover = (id: string | number) => {
     return document.getElementById(`article_${id}`)!
