@@ -227,18 +227,18 @@ pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
     const q1 = 
         \\ SELECT ROWID FROM IPADDR WHERE IP = ?
         ;
-    var stmt_select = self.db.prepare(q1) catch unreachable;
+    var stmt_select = self.db.prepare(q1) catch @panic("select init failed");
     defer stmt_select.deinit();
     if (stmt_select.one(usize, .{}, .{ip}) catch |e| return e) |id| return id;
     const q2 = 
         \\ INSERT INTO IPADDR (IP) values (?) RETURNING ROWID
         ;
-    var stmt_insert = self.db.prepare(q2) catch unreachable;
+    var stmt_insert = self.db.prepare(q2) catch @panic("insert init failed");
     defer stmt_insert.deinit();
     // uwnrap !?usize -> 
     return stmt_insert.one(usize, .{}, .{ip}) 
             catch |e| {return e; } 
-            orelse unreachable;
+            orelse @panic("never reached? wtf?");
 }
 
 pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize) !void {
