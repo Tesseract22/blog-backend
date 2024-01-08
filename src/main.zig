@@ -35,13 +35,14 @@ fn on_request(r: zap.SimpleRequest) void {
         const match = SubPath.match(sec) orelse break :blk;
         switch (match.keyword) {
             .article => {
-                std.log.info("{s}", .{r.getHeader("X-Forwarded-For") orelse "Not header named X-Forwarded-For"});
+                std.debug.print("header: {s}\n", .{r.getHeader("x-forwarded-for") orelse "Not header named X-Forwarded-For"});
+                std.debug.print("header: {s}\n", .{r.getHeader("host") orelse "Not header named Host"});
+                std.debug.print("header: {s}\n", .{r.getHeader("x-real-ip") orelse "Not header named X-Real-IP"});
                 const id = it.next() orelse "";
                 if (id.len > 0) {
                     r.sendFile(Config.PublicFolder ++ "index.html") catch break: blk;
                     return;
                 } else {
-                    std.debug.print("redirect\n", .{});
                     return r.redirectTo("/", null) catch break: blk;
                 }
             },
