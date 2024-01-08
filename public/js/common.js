@@ -35,8 +35,8 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     let appendArticle = (post) => {
         console.log(post.cover_url);
         const s = `        
-        <a class="article-col" href="article/${post.id}">
-            <h2 class="article-cover" article_id="${post.id}" id="article_${post.id}">
+        <a class="article-col" href="article/${post.id}" article_id="${post.id}">
+            <h2 class="article-cover" id="article_${post.id}">
                 <div class="article-desc">
                     ${post.title}
                 </div>
@@ -47,13 +47,14 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
             article_col.style.opacity = '0';
         }
         else if (admin) {
-            article_col.addEventListener('contextmenu', (ev) => {
+            (article_col).addEventListener('contextmenu', (ev) => {
                 ev.preventDefault();
+                console.log(ev.currentTarget, ev.target);
                 menu.style.top = `${ev.pageY}px`;
                 menu.style.left = `${ev.pageX}px`;
                 menu.style.display = '';
                 let old_id = menu.getAttribute('article_id') || -1;
-                let new_id = ev.target.getAttribute('article_id');
+                let new_id = ev.currentTarget.getAttribute('article_id');
                 menu.setAttribute('article_id', new_id);
                 let orignal_txt = ["Delete", "Edit Title", "Edit Cover"];
                 if (old_id !== new_id) {

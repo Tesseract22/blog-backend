@@ -44,8 +44,8 @@ let listArticle = async (admin: boolean) => {
     let appendArticle = (post: Post) => {
         console.log(post.cover_url)
         const s = `        
-        <a class="article-col" href="article/${post.id}">
-            <h2 class="article-cover" article_id="${post.id}" id="article_${post.id}">
+        <a class="article-col" href="article/${post.id}" article_id="${post.id}">
+            <h2 class="article-cover" id="article_${post.id}">
                 <div class="article-desc">
                     ${post.title}
                 </div>
@@ -55,13 +55,14 @@ let listArticle = async (admin: boolean) => {
         if (post.id < 0) {
             article_col.style.opacity  = '0'
         } else if (admin) {
-            article_col.addEventListener('contextmenu', (ev: MouseEvent) => {
+           (article_col).addEventListener('contextmenu', (ev: MouseEvent) => {
                 ev.preventDefault()
+                console.log(ev.currentTarget, ev.target)
                 menu.style.top = `${ev.pageY}px`
                 menu.style.left = `${ev.pageX}px`
                 menu.style.display = ''
                 let old_id = menu.getAttribute('article_id') || -1
-                let new_id = (ev.target! as HTMLElement).getAttribute('article_id')!
+                let new_id = (ev.currentTarget! as HTMLElement).getAttribute('article_id')!
                 menu.setAttribute('article_id', new_id)
                 let orignal_txt = ["Delete", "Edit Title", "Edit Cover"]
                 if (old_id !== new_id) {
@@ -296,13 +297,13 @@ let loadArticle = async (id: string | number, callback?: (post: Post, id: string
 
 
 
-let getArticleCover = (id: string) => {
+let getArticleCover = (id: string | number) => {
     return document.getElementById(`article_${id}`)!
 }
-let getArticleOut = (id: string) => {
+let getArticleOut = (id: string | number) => {
     return getArticleCover(id).parentElement!
 }
-let getArticleTitle = (id: string) => {
+let getArticleTitle = (id: string | number) => {
     return getArticleCover(id).firstElementChild! as HTMLElement
 }
 
