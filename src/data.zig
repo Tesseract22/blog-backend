@@ -49,3 +49,8 @@ pub const Commenter = struct {
     username: ?[]const u8 = null,
     id: ?usize = null,
 };
+
+pub const IP = struct {
+    ip: ?u32 = null,
+    id: ?usize = null,
+};

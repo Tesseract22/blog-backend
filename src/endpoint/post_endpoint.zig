@@ -54,40 +54,37 @@ fn trimPath(path: []const u8) []const u8 {
 /// GET /post/<id> => post[<id>]
 /// GET /post => []post
 /// else => bad_request
-fn getPost(end: *zap.SimpleEndpoint, req: zap.SimpleRequest) void {
+fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
     
-    const status = struct {
-        pub fn handle(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) zap.StatusCode {
-            const self = @fieldParentPtr(Self, "endpoint", e);
-            var aa = std.heap.ArenaAllocator.init(self.alloc);
-            defer aa.deinit();
-            if (r.path) |path| {
-                // /users
-                const path_trim = trimPath(path);
+        const self = @fieldParentPtr(Self, "endpoint", e);
+        var aa = std.heap.ArenaAllocator.init(self.alloc);
+        defer aa.deinit();
+        const path = r.path orelse return r.setStatus(.bad_request);
+            // /users
+        const path_trim = trimPath(path);
 
-                if (path_trim.len == e.settings.path.len) {
-                    self.listPost(r) catch return .internal_server_error;
-                    return .ok;
-                }
-        
-
-                if (self.postIdFromPath(path_trim)) |id| {
-                    const post = (self.db.getPost(id, &aa)  
-                        catch return .internal_server_error) 
-                        orelse return .not_found;
-                    const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) 
-                        catch return .internal_server_error;
-                    r.sendJson(json) catch return .internal_server_error;
-
-                }
-                return .ok;
-            } else {
-                return .bad_request;
-            }
+        if (path_trim.len == e.settings.path.len) {
+            self.listPost(r) catch return r.setStatus(.internal_server_error);
+            return;
         }
-    }.handle(end, req);
-    req.setStatus(status);
-
+        // post as in article post, not the method POST
+        const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
+        const post = (self.db.getPost(post_id, &aa)  
+            catch return r.setStatus(.internal_server_error))
+            orelse return r.setStatus(.not_found);
+        const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) 
+            catch return r.setStatus(.internal_server_error);
+        r.sendJson(json) catch return r.setStatus(.internal_server_error);
+        // storing ip
+        const ip_str = r.getHeader("x-real-ip") 
+            orelse return std.log.warn("No header named \"x-real-ip\"", .{});
+        const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
+            catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
+        const ip_id = self.db.insertIpAddr(ip_addr.sa.addr)
+            catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
+        self.db.insertIpMap(ip_id, post_id) 
+            catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
+        
 
 }
 

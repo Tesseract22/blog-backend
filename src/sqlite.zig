@@ -222,3 +222,31 @@ pub fn getCommenterById(self: *Sqlite, id: usize, arena: *Arena) !?Commenter{
     return stmt.oneAlloc(Commenter, arena.allocator(),.{}, .{id});
 }
 
+
+pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
+    const q1 = 
+        \\ SELECT ROWID FROM IPADDR WHERE IP = ?
+        ;
+    var stmt_select = self.db.prepare(q1) catch unreachable;
+    defer stmt_select.deinit();
+    if (stmt_select.one(usize, .{}, .{ip}) catch |e| return e) |id| return id;
+    const q2 = 
+        \\ INSERT INTO IPADDR (IP) values (?) RETURNING ROWID
+        ;
+    var stmt_insert = self.db.prepare(q2) catch unreachable;
+    defer stmt_insert.deinit();
+    // uwnrap !?usize -> 
+    return stmt_insert.one(usize, .{}, .{ip}) 
+            catch |e| {return e; } 
+            orelse unreachable;
+}
+
+pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize) !void {
+    const q = 
+        \\ INSERT OR IGNORE INTO IPMAP (IPID, POSTID) values (?, ?)
+        ;
+    var stmt = self.db.prepare(q) catch unreachable;
+    defer stmt.deinit();
+    return stmt.exec(.{}, .{ip_id, post_id});
+}
+
