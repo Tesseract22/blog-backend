@@ -3,3 +3,4 @@ zig-out
 .vscode
 src/auth
 blog.db
+update.sh
