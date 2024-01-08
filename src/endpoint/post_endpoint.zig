@@ -80,6 +80,7 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
             orelse return std.log.warn("No header named \"x-real-ip\"", .{});
         const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
             catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
+        std.log.warn("ip: {}", .{ip_addr});
         const ip_id = self.db.insertIpAddr(ip_addr.sa.addr)
             catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
         self.db.insertIpMap(ip_id, post_id) 
