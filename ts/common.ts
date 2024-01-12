@@ -42,7 +42,6 @@ let listArticle = async (admin: boolean) => {
 
     let post_meta: [Post] = await fetch("/post").then((res) => res.json())
     let appendArticle = (post: Post) => {
-        console.log(post.cover_url)
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
             <h2 class="article-cover" id="article_${post.id}">
@@ -57,7 +56,6 @@ let listArticle = async (admin: boolean) => {
         } else if (admin) {
            (article_col).addEventListener('contextmenu', (ev: MouseEvent) => {
                 ev.preventDefault()
-                console.log(ev.currentTarget, ev.target)
                 menu.style.top = `${ev.pageY}px`
                 menu.style.left = `${ev.pageX}px`
                 menu.style.display = ''
@@ -108,7 +106,6 @@ let listArticle = async (admin: boolean) => {
         })
         if (response2.status == 200) {
             let new_meta = await response2.json()
-            console.log(new_meta)
             let add = article_cont.lastChild!
             appendArticle(new_meta)
             article_cont.append(add)
@@ -116,7 +113,6 @@ let listArticle = async (admin: boolean) => {
     })
     article_cont.appendChild(add)
     getArticlesBg().onclick = (ev) => {
-        console.log("fired")
         menu.style.display = 'none'
     }
     // context menu for editing article
@@ -125,7 +121,6 @@ let listArticle = async (admin: boolean) => {
         el.addEventListener('click', async (ev) => {
             ev.preventDefault()
             ev.stopPropagation()
-            console.log("one of the menu item is clicked")
             let article_id = menu.getAttribute('article_id')!
             callback(article_id, el)
         })
@@ -135,7 +130,6 @@ let listArticle = async (admin: boolean) => {
             method: 'DELETE',
         })
         if (response.status == 200) {
-            console.log("deleteing")
             article_cont.removeChild(getArticleOut(id))
             menu.style.display = 'none'
         }
@@ -216,7 +210,6 @@ let indexScroll = (ev) => {
     if (index === null) return;
     let pad_str = window.getComputedStyle(article_cont, null).getPropertyValue('padding-top')
     let pad = parseFloat(pad_str.slice(0, pad_str.length - 2))
-    // console.log(document.documentElement.scrollTop, article_cont.offsetTop)
 
     if (document.documentElement.scrollTop < article_cont.offsetTop) {
         index.style.top = `${article_cont.offsetTop - document.documentElement.scrollTop + pad}px`
@@ -231,7 +224,6 @@ let convertMarkdown = (content) => {
     let tmp = document.createElement('div')
     tmp.innerHTML = html.trim()
     let codes = tmp.getElementsByTagName('code')
-    console.log(codes)
     return tmp.innerHTML
 }
 let generateIndex = () => {
@@ -262,7 +254,6 @@ let dirty = false
 let loadArticle = async (id: string | number, callback?: (post: Post, id: string | number) => void) => {
     getMenu().style.display = 'none'
     let article = await (await fetch(`/post/${id}`)).text()
-    console.log("article:",article)
     let res: Post = JSON.parse(article)
     let article_cont = document.getElementById("articles-container")!
     article_cont.style.justifyContent = 'center'

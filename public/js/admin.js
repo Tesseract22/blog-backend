@@ -32,7 +32,6 @@ let editArticle = (ev) => {
 };
 const base = "/admin";
 const route = (event) => {
-    // console.log(event.target)
     let href = getTargetA(event).getAttribute('href');
     event = event || window.event;
     event.preventDefault();
@@ -56,14 +55,13 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
     let match = (/^\/article\/(\d+)$/.exec(path) || [-1, -1]);
     let article_id = match[1];
     let jump_id = window.location.hash;
-    console.log(jump_id);
+    // console.log(jump_id)
     if (article_id > 0) {
         if (jump_id !== "" && dirty) {
             scrollTo(0, document.getElementById(jump_id).offsetTop);
         }
         else {
             return loadArticle(article_id, (res, id) => {
-                console.log("loadArticle callback");
                 content = res.content;
                 let article_cont = getArticlesContainer();
                 let switch_s = `        

@@ -33,7 +33,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     let editing_cover = false;
     let post_meta = yield fetch("/post").then((res) => res.json());
     let appendArticle = (post) => {
-        console.log(post.cover_url);
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
             <h2 class="article-cover" id="article_${post.id}">
@@ -49,7 +48,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         else if (admin) {
             (article_col).addEventListener('contextmenu', (ev) => {
                 ev.preventDefault();
-                console.log(ev.currentTarget, ev.target);
                 menu.style.top = `${ev.pageY}px`;
                 menu.style.left = `${ev.pageX}px`;
                 menu.style.display = '';
@@ -99,7 +97,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         });
         if (response2.status == 200) {
             let new_meta = yield response2.json();
-            console.log(new_meta);
             let add = article_cont.lastChild;
             appendArticle(new_meta);
             article_cont.append(add);
@@ -107,7 +104,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     }));
     article_cont.appendChild(add);
     getArticlesBg().onclick = (ev) => {
-        console.log("fired");
         menu.style.display = 'none';
     };
     // context menu for editing article
@@ -116,7 +112,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
         el.addEventListener('click', (ev) => __awaiter(this, void 0, void 0, function* () {
             ev.preventDefault();
             ev.stopPropagation();
-            console.log("one of the menu item is clicked");
             let article_id = menu.getAttribute('article_id');
             callback(article_id, el);
         }));
@@ -126,7 +121,6 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
             method: 'DELETE',
         });
         if (response.status == 200) {
-            console.log("deleteing");
             article_cont.removeChild(getArticleOut(id));
             menu.style.display = 'none';
         }
@@ -202,7 +196,6 @@ let indexScroll = (ev) => {
         return;
     let pad_str = window.getComputedStyle(article_cont, null).getPropertyValue('padding-top');
     let pad = parseFloat(pad_str.slice(0, pad_str.length - 2));
-    // console.log(document.documentElement.scrollTop, article_cont.offsetTop)
     if (document.documentElement.scrollTop < article_cont.offsetTop) {
         index.style.top = `${article_cont.offsetTop - document.documentElement.scrollTop + pad}px`;
     }
@@ -216,7 +209,6 @@ let convertMarkdown = (content) => {
     let tmp = document.createElement('div');
     tmp.innerHTML = html.trim();
     let codes = tmp.getElementsByTagName('code');
-    console.log(codes);
     return tmp.innerHTML;
 };
 let generateIndex = () => {
@@ -243,7 +235,6 @@ let dirty = false;
 let loadArticle = (id, callback) => __awaiter(this, void 0, void 0, function* () {
     getMenu().style.display = 'none';
     let article = yield (yield fetch(`/post/${id}`)).text();
-    console.log("article:", article);
     let res = JSON.parse(article);
     let article_cont = document.getElementById("articles-container");
     article_cont.style.justifyContent = 'center';
