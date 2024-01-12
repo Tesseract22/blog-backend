@@ -15,26 +15,20 @@ const route = (event) => {
 
 };
 
-// const routes = {
-//     404: "/pages/404.html",
-//     "/": "/pages/index.html",
-//     "/about": "/pages/about.html",
-//     "/lorem": "/pages/lorem.html",
-// };
 
-const handleLocation = async () => {
+const handleLocation = async (ev?: PopStateEvent) => {
     const path = window.location.pathname;
-    if (path === "/") return await listArticle(false)
+    if (path === "/") {
+        await listArticle(false)
+        return
+    }
     let article_id = (/^\/article\/(\d+)$/.exec(path) || [-1,-1])[1] as number
-    if (article_id > 0) {return loadArticle(article_id)}
+    if (article_id > 0) loadArticle(article_id)
 }
 
 window.onpopstate = handleLocation;
-
-// window.onload = async () => {
-//     listArticle()
-// }
 window.onload = (ev) => {
-    handleLocation()
+    handleLocation(null)
 };
+
 

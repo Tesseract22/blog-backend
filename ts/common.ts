@@ -243,6 +243,7 @@ let generateIndex = () => {
         let a = document.createElement('a')
         a.innerHTML = h3.innerHTML
         a.href = `#${h3.id}`
+        a.onclick = (ev) => { ev.preventDefault(); h3.scrollIntoView()}
         index.appendChild(a)
     }
 }
