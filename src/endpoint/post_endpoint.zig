@@ -59,11 +59,17 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
         var aa = std.heap.ArenaAllocator.init(self.alloc);
         defer aa.deinit();
 
-        const ip_str = r.getHeader("x-real-ip") 
-            orelse return std.log.warn("No header named \"x-real-ip\"", .{});
-        const ip_addr = std.net.Ip4Address.parse(ip_str, 0) 
-            catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
-        std.log.warn("ip: {}", .{ip_addr});
+
+        const ip_addr_or_null: ?std.net.Ip4Address = ip_blk: {
+            const ip_str = r.getHeader("x-real-ip") orelse {
+                std.log.warn("No header named \"x-real-ip\"", .{});
+                break :ip_blk null;
+            };
+            break: ip_blk std.net.Ip4Address.parse(ip_str, 0) catch |err| {
+                std.log.warn("{any} Can not parse {s} as \"ip\"", .{err, ip_str});
+                break :ip_blk null;
+            };
+        };
 
 
         const path = r.path orelse return r.setStatus(.bad_request);
@@ -83,6 +89,9 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
             catch return r.setStatus(.internal_server_error);
         r.sendJson(json) catch return r.setStatus(.internal_server_error);
         // storing ip
+        const ip_addr = ip_addr_or_null orelse return;
+        
+        std.log.debug("storing IP: {}", .{ip_addr});
         const ip_id = self.db.insertIpAddr(ip_addr.sa.addr)
             catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
         self.db.insertIpMap(ip_id, post_id) 

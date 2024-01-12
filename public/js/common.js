@@ -31,7 +31,9 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     menu.style.display = 'none';
     let editing_title = false;
     let editing_cover = false;
-    let post_meta = yield fetch("/post").then((res) => res.json());
+    let raw = yield fetch("/post");
+    console.log(raw);
+    let post_meta = yield raw.json().catch((reason) => console.log(reason));
     let appendArticle = (post) => {
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">

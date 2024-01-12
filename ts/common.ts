@@ -39,8 +39,9 @@ let listArticle = async (admin: boolean) => {
     
     let editing_title = false
     let editing_cover = false
-
-    let post_meta: [Post] = await fetch("/post").then((res) => res.json())
+    let raw = await fetch("/post")
+    console.log(raw)
+    let post_meta: [Post] = await raw.json().catch((reason) => console.log(reason))
     let appendArticle = (post: Post) => {
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">

@@ -252,7 +252,7 @@ pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
 
 pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize) !void {
     const q = 
-        \\ INSERT OR IGNORE INTO IPMAP (IPID, POSTID) values (?, ?)
+        \\ INSERT INTO IPMAP (IPID, POSTID) values (?, ?)
         ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
