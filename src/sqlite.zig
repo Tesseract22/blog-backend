@@ -250,13 +250,13 @@ pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
             orelse @panic("never reached? wtf?");
 }
 
-pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize) !void {
+pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize, time: i64) !void {
     const q = 
-        \\ INSERT INTO IPMAP (IPID, POSTID) values (?, ?)
+        \\ INSERT INTO IPMAP (IPID, POSTID, TIME) values (?, ?, ?)
         ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    return stmt.exec(.{}, .{ip_id, post_id});
+    return stmt.exec(.{}, .{ip_id, post_id, time});
 }
 
 

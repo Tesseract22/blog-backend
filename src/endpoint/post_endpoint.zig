@@ -94,7 +94,7 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
         std.log.debug("storing IP: {}", .{ip_addr});
         const ip_id = self.db.insertIpAddr(ip_addr.sa.addr)
             catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
-        self.db.insertIpMap(ip_id, post_id) 
+        self.db.insertIpMap(ip_id, post_id, std.time.milliTimestamp()) 
             catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
         self.db.updatePostViews(post_id, 1)
             catch |err| return std.log.warn("{any} Unexpected Error while incrementing post {} views", .{post_id, err});
