@@ -45,7 +45,7 @@ let listArticle = async (admin: boolean) => {
     let appendArticle = (post: Post) => {
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
-            <h2 class="article-cover" id="article_${post.id}">
+            <h2 class="article-cover" id="article_${post.id}" published='${post.published}'>
                 <div class="article-desc">
                     ${post.title}
                 </div>
@@ -63,7 +63,7 @@ let listArticle = async (admin: boolean) => {
                 let old_id = menu.getAttribute('article_id') || -1
                 let new_id = (ev.currentTarget! as HTMLElement).getAttribute('article_id')!
                 menu.setAttribute('article_id', new_id)
-                let orignal_txt = ["Delete", "Edit Title", "Edit Cover"]
+                let orignal_txt = ["Delete", "Edit Title", "Edit Cover", getArticleCover(new_id).getAttribute("published") === "false" ? "Publish" : "Unpublish"]
                 if (old_id !== new_id) {
                     for(var i=0, len = menu.childElementCount ; i < len; ++i){
                         menu.children[i].innerHTML = orignal_txt[i]
@@ -193,6 +193,20 @@ let listArticle = async (admin: boolean) => {
                     editing_cover = false
                 }
             }
+        }
+    })
+    addMenuItem('edit-publish', async (id, target) => {
+        let cover =  getArticleCover(id)
+        let stat = cover.getAttribute('published')! === "true"
+        let response = await fetch(`/post/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                published: !stat,
+            })
+        })
+        if (response.status == 200) {
+            target.innerHTML = stat ? 'Publish' : 'Unpublish'
+            cover.setAttribute('published', !stat ? "true" : "false")
         }
     })
 }

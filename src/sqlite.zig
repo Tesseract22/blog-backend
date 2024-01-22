@@ -65,6 +65,17 @@ pub fn deletePost(self: *Sqlite, id: usize) !void {
 
 
 
+pub fn listPostPublished(self: *Sqlite, arena: *Arena) ![]Post {
+    const q = 
+        \\ SELECT 
+        \\ CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST WHERE PUBLISHED != 0
+    ;
+    var stmt = self.db.prepare(q) catch unreachable;
+    defer stmt.deinit();
+    const rows = try stmt.all(Post, arena.allocator(), .{   }, .{});
+    return rows;
+    
+}
 
 pub fn listPost(self: *Sqlite, arena: *Arena) ![]Post {
     const q = 

@@ -37,7 +37,7 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     let appendArticle = (post) => {
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
-            <h2 class="article-cover" id="article_${post.id}">
+            <h2 class="article-cover" id="article_${post.id}" published='${post.published}'>
                 <div class="article-desc">
                     ${post.title}
                 </div>
@@ -56,7 +56,7 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                 let old_id = menu.getAttribute('article_id') || -1;
                 let new_id = ev.currentTarget.getAttribute('article_id');
                 menu.setAttribute('article_id', new_id);
-                let orignal_txt = ["Delete", "Edit Title", "Edit Cover"];
+                let orignal_txt = ["Delete", "Edit Title", "Edit Cover", getArticleCover(new_id).getAttribute("published") === "false" ? "Publish" : "Unpublish"];
                 if (old_id !== new_id) {
                     for (var i = 0, len = menu.childElementCount; i < len; ++i) {
                         menu.children[i].innerHTML = orignal_txt[i];
@@ -183,6 +183,20 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                 }
             }
         });
+    }));
+    addMenuItem('edit-publish', (id, target) => __awaiter(this, void 0, void 0, function* () {
+        let cover = getArticleCover(id);
+        let stat = cover.getAttribute('published') === "true";
+        let response = yield fetch(`/post/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                published: !stat,
+            })
+        });
+        if (response.status == 200) {
+            target.innerHTML = stat ? 'Publish' : 'Unpublish';
+            cover.setAttribute('published', !stat ? "true" : "false");
+        }
     }));
 });
 let Url2Css = (u) => {

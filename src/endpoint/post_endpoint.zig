@@ -85,9 +85,14 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
         const post = (self.db.getPost(post_id, &aa)  
             catch return r.setStatus(.internal_server_error))
             orelse return r.setStatus(.not_found);
-        const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) 
-            catch return r.setStatus(.internal_server_error);
-        r.sendJson(json) catch return r.setStatus(.internal_server_error);
+        if (post.published.? or VerifyCookie(r)) {
+            const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) 
+                catch return r.setStatus(.internal_server_error);
+            r.sendJson(json) catch return r.setStatus(.internal_server_error);
+        } else {
+            return r.setStatus(.unauthorized);
+        }
+
         // storing ip
         const ip_addr = ip_addr_or_null orelse return;
         
@@ -104,7 +109,8 @@ fn getPost(e: *zap.SimpleEndpoint, r: zap.SimpleRequest) void {
 fn listPost(self: *Self, r: zap.SimpleRequest) !void {
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
-    const posts = try self.db.listPost(&arena);
+    
+    const posts = if (VerifyCookie(r)) try self.db.listPost(&arena) else try self.db.listPostPublished(&arena);
     const json = try std.json.stringifyAlloc(arena.allocator(), posts, .{});
     try r.sendJson(json) ;
     
