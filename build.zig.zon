@@ -5,12 +5,12 @@
     .dependencies = .{
         // zap v0.1.14-pre
         .zap = .{
-            .url = "https://github.com/edyu/zap/archive/79fb534e805dd93b8ab3ec4a9df733bf0901055b.tar.gz",
-            .hash = "1220ddb3cf7691c7c5312c89909cd9e53dee6adbc0e6438246e25e888a898923fffe",
+            .url = "https://github.com/zigzap/zap/archive/zig-0.12.0.tar.gz",
+            .hash = "1220ca283c7e4240adbf9dfa31f7894818efc93ce54300521dad777a2670e9674dd8",
         },
         .sqlite = .{
-            .url = "https://github.com/vrischmann/zig-sqlite/archive/19535aab5760eeaf2979a9dadfca3bb21d1594b9.tar.gz",
-            .hash = "12208c654deea149cee27eaa45d0e6515c3d8f97d775a4156cbcce0ff424b5d26ea3",
+            .url = "https://github.com/vrischmann/zig-sqlite/archive/a3095acc98ef1eb32549dedac032bba8399afca0.tar.gz",
+            .hash = "12203f7d14722debe8f1a2168f28a262aaa5ec2457a7a975fc7dcc1123ed11597c98",
         },
     },
 }
