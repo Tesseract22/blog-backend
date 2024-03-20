@@ -19,10 +19,7 @@ pub const Post = struct {
         _ = fmt;
         _ = options;
 
-        try writer.print("{{id: {any}, created: {any}, modified: {any}, title: {any}, author: {any} views: {any}\n{any} }}\n", 
-                    .{self.id, self.created_time, self.modified_time, self.title, self.author, self.views, self.content});
-
-
+        try writer.print("{{id: {any}, created: {any}, modified: {any}, title: {any}, author: {any} views: {any}\n{any} }}\n", .{ self.id, self.created_time, self.modified_time, self.title, self.author, self.views, self.content });
     }
 };
 
