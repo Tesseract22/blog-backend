@@ -1,5 +1,6 @@
 //! This is enpoint responsible for any visist for /post
 //! GET /post/<id> | /post
+//! PATCH /post/<id> | /post (retreives only metadata)
 //! POST /post/<id> <= JSON(post)
 //! PUT /post/<id> <= JSON(post)
 //! DELETE /post/<id> <= JSON(post)
@@ -94,8 +95,8 @@ fn postPost(e: *zap.Endpoint, r: zap.Request) void {
     const self = @as(*Self, @fieldParentPtr("endpoint", e));
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
-        var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
-            std.log.err("Cannot Parse Json: {s}", .{body});
+        var post = std.json.parseFromSlice(Post, self.alloc, "{\"title\":\"new title\",\"content\":\"Edit Me\", \"author\":\"cat\",\"published\":false,\"cover_url\":\"\"}", .{}) catch |err| {
+            std.log.err("[{}] Failedt to parse Json: {s}", .{err, body});
             return r.setStatus(.bad_request);
         };
         defer post.deinit();

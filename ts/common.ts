@@ -97,7 +97,7 @@ let listArticle = async (admin: boolean) => {
                 title: "new title",
                 content: "Edit Me",
                 author: "cat",
-                published: 0,
+                published: false,
                 cover_url: "",
             })
         })
