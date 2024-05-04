@@ -48,7 +48,7 @@ fn trimPath(path: []const u8) []const u8 {
 fn getComments(end: *zap.Endpoint, req: zap.Request) void {
     const status = struct {
         pub fn handle(e: *zap.Endpoint, r: zap.Request) zap.StatusCode {
-            const self = @fieldParentPtr(Self, "endpoint", e);
+            const self = @as(*Self, @fieldParentPtr("endpoint", e));
             if (r.path) |path| {
                 if (self.commentIdFromPath(trimPath(path))) |id| {
                     var arena = std.heap.ArenaAllocator.init(self.alloc);
@@ -71,7 +71,7 @@ fn getComments(end: *zap.Endpoint, req: zap.Request) void {
 /// else => bad_request
 /// The jso
 fn postComment(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
     if (r.body) |body| {
@@ -91,7 +91,7 @@ fn postComment(e: *zap.Endpoint, r: zap.Request) void {
 
 fn putComment(e: *zap.Endpoint, r: zap.Request) void {
     if (!AuthRequest(r)) return r.setStatus(.unauthorized);
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
     if (r.body) |body| {
@@ -109,7 +109,7 @@ fn putComment(e: *zap.Endpoint, r: zap.Request) void {
 
 fn deleteComment(e: *zap.Endpoint, r: zap.Request) void {
     if (!AuthRequest(r)) return r.setStatus(.unauthorized);
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     if (r.path) |path| {
         if (self.commentIdFromPath(path)) |id| {
             self.db.deleteComment(id) catch return r.setStatus(.bad_request);

@@ -54,7 +54,7 @@ fn trimPath(path: []const u8) []const u8 {
 fn getPost(end: *zap.Endpoint, req: zap.Request) void {
     const status = struct {
         pub fn handle(e: *zap.Endpoint, r: zap.Request) zap.StatusCode {
-            const self = @fieldParentPtr(Self, "endpoint", e);
+            const self = @as(*Self, @fieldParentPtr("endpoint", e));
             var aa = std.heap.ArenaAllocator.init(self.alloc);
             defer aa.deinit();
             if (r.path) |path| {
@@ -91,7 +91,7 @@ fn listPost(self: *Self, r: zap.Request) !void {
 /// else => bad_request
 /// The jso
 fn postPost(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
@@ -115,7 +115,7 @@ fn postPost(e: *zap.Endpoint, r: zap.Request) void {
 
 fn putPost(e: *zap.Endpoint, r: zap.Request) void {
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     if (r.body) |body| {
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch {
             std.log.err("Cannot parsed json {s}", .{body});
@@ -136,7 +136,7 @@ fn putPost(e: *zap.Endpoint, r: zap.Request) void {
 }
 
 fn patchPost(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
     if (r.path) |path| {
@@ -151,7 +151,7 @@ fn patchPost(e: *zap.Endpoint, r: zap.Request) void {
 }
 
 fn deletePost(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {

@@ -58,7 +58,7 @@ pub fn getEndpoint(self: *Self) *zap.Endpoint {
 }
 
 fn postImage(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
 
     r.parseBody() catch |err| {
         std.log.err("Parse Body error: {any}. Expected if body is empty", .{err});
