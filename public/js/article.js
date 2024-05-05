@@ -15,25 +15,17 @@ const route = (event) => {
     window.history.pushState({}, "", href);
     handleLocation();
 };
-// const routes = {
-//     404: "/pages/404.html",
-//     "/": "/pages/index.html",
-//     "/about": "/pages/about.html",
-//     "/lorem": "/pages/lorem.html",
-// };
-const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
+const handleLocation = (ev) => __awaiter(this, void 0, void 0, function* () {
     const path = window.location.pathname;
-    if (path === "/")
-        return yield listArticle(false);
-    let article_id = (/^\/article\/(\d+)$/.exec(path) || [-1, -1])[1];
-    if (article_id > 0) {
-        return loadArticle(article_id);
+    if (path === "/") {
+        yield listArticle(false);
+        return;
     }
+    let article_id = (/^\/article\/(\d+)$/.exec(path) || [-1, -1])[1];
+    if (article_id > 0)
+        loadArticle(article_id);
 });
 window.onpopstate = handleLocation;
-// window.onload = async () => {
-//     listArticle()
-// }
 window.onload = (ev) => {
-    handleLocation();
+    handleLocation(null);
 };

@@ -1,5 +1,6 @@
 /// <reference path="hljs.d.ts"/>
 /// <reference path="showdown.d.ts"/>
+/// <reference path="showdown-kertex.d.ts"/>
 
 interface Post {
     created_time?: number,
@@ -39,13 +40,13 @@ let listArticle = async (admin: boolean) => {
     
     let editing_title = false
     let editing_cover = false
-
-    let post_meta: [Post] = await fetch("/post").then((res) => res.json())
+    let raw = await fetch("/post")
+    console.log(raw)
+    let post_meta: [Post] = await raw.json().catch((reason) => console.log(reason))
     let appendArticle = (post: Post) => {
-        console.log(post.cover_url)
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
-            <h2 class="article-cover" id="article_${post.id}">
+            <h2 class="article-cover" id="article_${post.id}" published='${post.published}'>
                 <div class="article-desc">
                     ${post.title}
                 </div>
@@ -57,14 +58,13 @@ let listArticle = async (admin: boolean) => {
         } else if (admin) {
            (article_col).addEventListener('contextmenu', (ev: MouseEvent) => {
                 ev.preventDefault()
-                console.log(ev.currentTarget, ev.target)
                 menu.style.top = `${ev.pageY}px`
                 menu.style.left = `${ev.pageX}px`
                 menu.style.display = ''
                 let old_id = menu.getAttribute('article_id') || -1
                 let new_id = (ev.currentTarget! as HTMLElement).getAttribute('article_id')!
                 menu.setAttribute('article_id', new_id)
-                let orignal_txt = ["Delete", "Edit Title", "Edit Cover"]
+                let orignal_txt = ["Delete", "Edit Title", "Edit Cover", getArticleCover(new_id).getAttribute("published") === "false" ? "Publish" : "Unpublish"]
                 if (old_id !== new_id) {
                     for(var i=0, len = menu.childElementCount ; i < len; ++i){
                         menu.children[i].innerHTML = orignal_txt[i]
@@ -98,7 +98,7 @@ let listArticle = async (admin: boolean) => {
                 title: "new title",
                 content: "Edit Me",
                 author: "cat",
-                published: 0,
+                published: false,
                 cover_url: "",
             })
         })
@@ -108,7 +108,6 @@ let listArticle = async (admin: boolean) => {
         })
         if (response2.status == 200) {
             let new_meta = await response2.json()
-            console.log(new_meta)
             let add = article_cont.lastChild!
             appendArticle(new_meta)
             article_cont.append(add)
@@ -116,7 +115,6 @@ let listArticle = async (admin: boolean) => {
     })
     article_cont.appendChild(add)
     getArticlesBg().onclick = (ev) => {
-        console.log("fired")
         menu.style.display = 'none'
     }
     // context menu for editing article
@@ -125,7 +123,6 @@ let listArticle = async (admin: boolean) => {
         el.addEventListener('click', async (ev) => {
             ev.preventDefault()
             ev.stopPropagation()
-            console.log("one of the menu item is clicked")
             let article_id = menu.getAttribute('article_id')!
             callback(article_id, el)
         })
@@ -135,7 +132,6 @@ let listArticle = async (admin: boolean) => {
             method: 'DELETE',
         })
         if (response.status == 200) {
-            console.log("deleteing")
             article_cont.removeChild(getArticleOut(id))
             menu.style.display = 'none'
         }
@@ -200,6 +196,20 @@ let listArticle = async (admin: boolean) => {
             }
         }
     })
+    addMenuItem('edit-publish', async (id, target) => {
+        let cover =  getArticleCover(id)
+        let stat = cover.getAttribute('published')! === "true"
+        let response = await fetch(`/post/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                published: !stat,
+            })
+        })
+        if (response.status == 200) {
+            target.innerHTML = stat ? 'Publish' : 'Unpublish'
+            cover.setAttribute('published', !stat ? "true" : "false")
+        }
+    })
 }
 
 let Url2Css = (u: string) => {
@@ -216,7 +226,6 @@ let indexScroll = (ev) => {
     if (index === null) return;
     let pad_str = window.getComputedStyle(article_cont, null).getPropertyValue('padding-top')
     let pad = parseFloat(pad_str.slice(0, pad_str.length - 2))
-    // console.log(document.documentElement.scrollTop, article_cont.offsetTop)
 
     if (document.documentElement.scrollTop < article_cont.offsetTop) {
         index.style.top = `${article_cont.offsetTop - document.documentElement.scrollTop + pad}px`
@@ -226,12 +235,20 @@ let indexScroll = (ev) => {
 }
 
 let convertMarkdown = (content) => {
-    var converter = new showdown.Converter()
+    var converter = new showdown.Converter(
+        {
+            extensions: [
+                showdownkertex.showdownKatex({
+                output: "mathml",
+              }),
+            ],
+          }
+    )
+    console.log("convert markdown")
     let html = converter.makeHtml(content)
     let tmp = document.createElement('div')
     tmp.innerHTML = html.trim()
     let codes = tmp.getElementsByTagName('code')
-    console.log(codes)
     return tmp.innerHTML
 }
 let generateIndex = () => {
@@ -251,6 +268,7 @@ let generateIndex = () => {
         let a = document.createElement('a')
         a.innerHTML = h3.innerHTML
         a.href = `#${h3.id}`
+        a.onclick = (ev) => { ev.preventDefault(); h3.scrollIntoView()}
         index.appendChild(a)
     }
 }
@@ -262,7 +280,6 @@ let dirty = false
 let loadArticle = async (id: string | number, callback?: (post: Post, id: string | number) => void) => {
     getMenu().style.display = 'none'
     let article = await (await fetch(`/post/${id}`)).text()
-    console.log("article:",article)
     let res: Post = JSON.parse(article)
     let article_cont = document.getElementById("articles-container")!
     article_cont.style.justifyContent = 'center'
@@ -333,6 +350,10 @@ function DOMFromStr(s) {
     d.innerHTML = s.trim()
     return d.firstChild!
 }
+
+
+
+
 
 
 

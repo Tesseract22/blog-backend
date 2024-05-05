@@ -5,3 +5,4 @@ src/auth
 blog.db
 update.sh
 blog_rsa
+log.txt

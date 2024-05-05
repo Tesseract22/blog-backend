@@ -1,5 +1,5 @@
 const std = @import("std");
-const builtin =@import("builtin");
+const builtin = @import("builtin");
 const zap = @import("zap");
 const Enpoint = @import("endpoint.zig");
 const util = @import("util.zig");
@@ -20,32 +20,33 @@ const SubPath = enum {
         const type_info = @typeInfo(SubPath);
         inline for (type_info.Enum.fields) |f| {
             if (std.mem.startsWith(u8, path, f.name)) {
-                return .{.keyword = @enumFromInt(f.value), .remain = path[f.name.len..]};
+                return .{ .keyword = @enumFromInt(f.value), .remain = path[f.name.len..] };
             }
         }
         return null;
     }
 };
 var rand = std.rand.DefaultPrng.init(0);
-fn on_request(r: zap.SimpleRequest) void {
+fn on_request(r: zap.Request) void {
     blk: {
-        const path =(r.path orelse break :blk)[1..];
+        const path = (r.path orelse break :blk)[1..];
         var it = std.mem.splitScalar(u8, path, '/');
         const sec = it.next() orelse break :blk;
         const match = SubPath.match(sec) orelse break :blk;
         switch (match.keyword) {
             .article => {
+                std.log.info("{s}", .{r.getHeader("X-Forwarded-For") orelse "Not header named X-Forwarded-For"});
                 const id = it.next() orelse "";
                 if (id.len > 0) {
-                    r.sendFile(Config.PublicFolder ++ "index.html") catch break: blk;
+                    r.sendFile(Config.PublicFolder ++ "index.html") catch break :blk;
                     return;
                 } else {
                     std.debug.print("redirect\n", .{});
-                    return r.redirectTo("/", null) catch break: blk;
+                    return r.redirectTo("/", null) catch break :blk;
                 }
             },
             .login => {
-                r.sendFile(Config.PublicFolder ++ "html/login.html") catch break: blk;
+                r.sendFile(Config.PublicFolder ++ "html/login.html") catch break :blk;
                 return;
             },
             .auth => {
@@ -54,21 +55,19 @@ fn on_request(r: zap.SimpleRequest) void {
                     // r.sendBody("Authentication Failed") catch break :blk;
                     return r.setStatus(.unauthorized);
                 }
-                var buf = [_]u8 {0} ** 20;
+                var buf = [_]u8{0} ** 20;
                 const cookie_val = rand.next();
                 const val = std.fmt.bufPrint(&buf, "{}", .{cookie_val}) catch unreachable;
                 const domain = switch (builtin.mode) {
-                        .Debug => null, // localhost
-                        else => Config.Domain,
+                    .Debug => null, // localhost
+                    else => Config.Domain,
                 };
-                const cookie = zap.CookieArgs {
+                r.setCookie(.{
                     .name = "admin-cookie",
                     .value = val,
                     .domain = domain,
                     .path = "/",
-
-                };
-                r.setCookie(cookie) catch break :blk;
+                }) catch break :blk;
                 r.sendBody("Set Cookie") catch break :blk;
                 util.SessionCookie = cookie_val;
                 return;
@@ -81,12 +80,11 @@ fn on_request(r: zap.SimpleRequest) void {
 
                 const success = util.VerifyCookie(r);
                 if (!success) {
-                    return r.redirectTo("/login", null) catch break: blk;
+                    return r.redirectTo("/login", null) catch break :blk;
                 }
-                return r.sendFile(Config.PublicFolder ++ "html/admin.html") catch break: blk;
-            }
+                return r.sendFile(Config.PublicFolder ++ "html/admin.html") catch break :blk;
+            },
         }
-        
     }
 
     r.sendBody("<html><body><h1>404</h1></body></html>") catch return;
@@ -94,17 +92,16 @@ fn on_request(r: zap.SimpleRequest) void {
 }
 
 pub fn main() !void {
-    
     var gpa = std.heap.GeneralPurposeAllocator(.{
         .thread_safe = true,
     }){};
-    var allocator = gpa.allocator();
+    const allocator = gpa.allocator();
     var db = try Sqlite.init();
     defer db.deinit();
     // we scope everything that can allocate within this block for leak detection
     {
         // setup listener
-        var listener = zap.SimpleEndpointListener.init(
+        var listener = zap.Endpoint.Listener.init(
             allocator,
             .{
                 .port = Config.Port,
@@ -120,9 +117,9 @@ pub fn main() !void {
         var post_end = Enpoint.PostEndPoint.init(allocator, "/post", &db);
         var comment_end = Enpoint.CommentEndPoint.init(allocator, "/comment", &db);
         var image_end = Enpoint.ImageEndPoint.init(allocator, "/image");
-        try listener.addEndpoint(post_end.getEndpoint());
-        try listener.addEndpoint(comment_end.getEndpoint());
-        try listener.addEndpoint(image_end.getEndpoint());
+        try listener.register(post_end.getEndpoint());
+        try listener.register(comment_end.getEndpoint());
+        try listener.register(image_end.getEndpoint());
 
         // listen
         try listener.listen();

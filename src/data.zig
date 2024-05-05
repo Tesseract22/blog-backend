@@ -7,7 +7,7 @@ pub const Post = struct {
     views: ?usize = null,
     author: ?[]const u8 = null,
     content: ?[]const u8 = null,
-    published: ?i32 = null,
+    published: ?bool = null,
     cover_url: ?[]const u8 = null,
     id: ?usize = null, // set to null to use AUTOINCREMENT in sqlite
     pub fn format(
@@ -19,10 +19,7 @@ pub const Post = struct {
         _ = fmt;
         _ = options;
 
-        try writer.print("{{id: {any}, created: {any}, modified: {any}, title: {any}, author: {any} views: {any}\n{any} }}\n", 
-                    .{self.id, self.created_time, self.modified_time, self.title, self.author, self.views, self.content});
-
-
+        try writer.print("{{id: {any}, created: {any}, modified: {any}, title: {any}, author: {any} views: {any}\n{any} }}\n", .{ self.id, self.created_time, self.modified_time, self.title, self.author, self.views, self.content });
     }
 };
 
@@ -47,5 +44,10 @@ pub const CommentFull = struct {
 pub const Commenter = struct {
     email: ?[]const u8 = null,
     username: ?[]const u8 = null,
+    id: ?usize = null,
+};
+
+pub const IP = struct {
+    ip: ?u32 = null,
     id: ?usize = null,
 };

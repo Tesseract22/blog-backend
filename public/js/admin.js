@@ -8,19 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 /// <reference path="common.ts"/>
+let editor_scroll = 0;
+let view_scroll = 0;
 let editArticle = (ev) => {
     ev.stopPropagation();
     preview = !preview;
     let text = document.getElementById('text');
     let index = document.getElementById('article-index');
     if (preview) {
+        let editor = document.getElementById('editor');
+        if (editor)
+            editor_scroll = editor.scrollTop;
         index.style.display = '';
         content = text.firstElementChild.value;
         text.innerHTML = convertMarkdown(content);
         hljs.highlightAll();
         generateIndex();
+        scrollTo(0, view_scroll);
     }
     else {
+        view_scroll = document.body.scrollTop;
         dirty = true;
         document.getElementById('save').innerText = 'Save';
         index.style.display = 'none';
@@ -28,11 +35,11 @@ let editArticle = (ev) => {
         input.value = content;
         text.innerHTML = '';
         text.appendChild(input);
+        input.scrollBy(0, editor_scroll);
     }
 };
 const base = "/admin";
 const route = (event) => {
-    // console.log(event.target)
     let href = getTargetA(event).getAttribute('href');
     event = event || window.event;
     event.preventDefault();
@@ -59,11 +66,10 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
     console.log(jump_id);
     if (article_id > 0) {
         if (jump_id !== "" && dirty) {
-            scrollTo(0, document.getElementById(jump_id).offsetTop);
+            // scrollTo(0, document.getElementById(jump_id)!.offsetTop)
         }
         else {
             return loadArticle(article_id, (res, id) => {
-                console.log("loadArticle callback");
                 content = res.content;
                 let article_cont = getArticlesContainer();
                 let switch_s = `        
@@ -96,7 +102,4 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
     }
 });
 window.onpopstate = handleLocation;
-// window.onload = async () => {
-//     listArticle()
-// }
 window.onload = () => handleLocation();
