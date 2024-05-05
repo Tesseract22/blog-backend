@@ -1,5 +1,6 @@
 /// <reference path="hljs.d.ts"/>
 /// <reference path="showdown.d.ts"/>
+/// <reference path="showdown-kertex.d.ts"/>
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -89,7 +90,7 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
                 title: "new title",
                 content: "Edit Me",
                 author: "cat",
-                published: 0,
+                published: false,
                 cover_url: "",
             })
         });
@@ -220,7 +221,14 @@ let indexScroll = (ev) => {
     }
 };
 let convertMarkdown = (content) => {
-    var converter = new showdown.Converter();
+    var converter = new showdown.Converter({
+        extensions: [
+            showdownkertex.showdownKatex({
+                output: "mathml",
+            }),
+        ],
+    });
+    console.log("convert markdown");
     let html = converter.makeHtml(content);
     let tmp = document.createElement('div');
     tmp.innerHTML = html.trim();

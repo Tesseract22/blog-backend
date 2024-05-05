@@ -1,5 +1,6 @@
 /// <reference path="hljs.d.ts"/>
 /// <reference path="showdown.d.ts"/>
+/// <reference path="showdown-kertex.d.ts"/>
 
 interface Post {
     created_time?: number,
@@ -234,7 +235,16 @@ let indexScroll = (ev) => {
 }
 
 let convertMarkdown = (content) => {
-    var converter = new showdown.Converter()
+    var converter = new showdown.Converter(
+        {
+            extensions: [
+                showdownkertex.showdownKatex({
+                output: "mathml",
+              }),
+            ],
+          }
+    )
+    console.log("convert markdown")
     let html = converter.makeHtml(content)
     let tmp = document.createElement('div')
     tmp.innerHTML = html.trim()
@@ -340,6 +350,10 @@ function DOMFromStr(s) {
     d.innerHTML = s.trim()
     return d.firstChild!
 }
+
+
+
+
 
 
 
