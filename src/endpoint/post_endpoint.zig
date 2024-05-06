@@ -63,12 +63,13 @@ fn getPost(end: *zap.Endpoint, req: zap.Request) void {
                 const path_trim = trimPath(path);
 
                 if (path_trim.len == e.settings.path.len) {
-                    self.listPost(r) catch return .internal_server_error;
+                    self.listPost(r, !VerifyCookie(r)) catch return .internal_server_error;
                     return .ok;
                 }
 
                 if (self.postIdFromPath(path_trim)) |id| {
                     const post = (self.db.getPost(id, &aa) catch return .internal_server_error) orelse return .not_found;
+                    if (!post.published.? and !VerifyCookie(r)) return .unauthorized;
                     const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) catch return .internal_server_error;
                     r.sendJson(json) catch return .internal_server_error;
                 }
@@ -81,10 +82,10 @@ fn getPost(end: *zap.Endpoint, req: zap.Request) void {
     req.setStatus(status);
 }
 
-fn listPost(self: *Self, r: zap.Request) !void {
+fn listPost(self: *Self, r: zap.Request, published_only: bool) !void {
     var arena = std.heap.ArenaAllocator.init(self.alloc);
     defer arena.deinit();
-    const posts = try self.db.listPost(&arena);
+    const posts = if (published_only) try self.db.listPostPublished(&arena) else try self.db.listPost(&arena);
     const json = try std.json.stringifyAlloc(arena.allocator(), posts, .{});
     try r.sendJson(json);
 }

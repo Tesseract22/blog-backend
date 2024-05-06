@@ -20,6 +20,11 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
+    b.installDirectory(.{
+        .source_dir = exe.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "doc",
+    });
 
     // zap
     const zap = b.dependency("zap", .{

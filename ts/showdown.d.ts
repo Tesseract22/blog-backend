@@ -10,6 +10,7 @@ declare namespace Showdown {
     /**
      * Showdown event listener.
      */
+
     interface EventListener {
         /**
          * @param evtName - The event name.
