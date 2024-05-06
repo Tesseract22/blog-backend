@@ -32,9 +32,13 @@ let listArticle = (admin) => __awaiter(this, void 0, void 0, function* () {
     let editing_title = false;
     let editing_cover = false;
     let raw = yield fetch("/post");
-    console.log(raw);
+    // console.log(raw)
     let post_meta = yield raw.json().catch((reason) => console.log(reason));
     let appendArticle = (post) => {
+        // console.log(post.published!)
+        if (post.published != 1 && !admin) {
+            return;
+        }
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
             <h2 class="article-cover" id="article_${post.id}" published='${post.published}'>

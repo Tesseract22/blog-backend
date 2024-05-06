@@ -40,9 +40,13 @@ let listArticle = async (admin: boolean) => {
     let editing_title = false
     let editing_cover = false
     let raw = await fetch("/post")
-    console.log(raw)
+    // console.log(raw)
     let post_meta: [Post] = await raw.json().catch((reason) => console.log(reason))
     let appendArticle = (post: Post) => {
+        // console.log(post.published!)
+        if (post.published! != 1 && !admin) {
+            return
+        }
         const s = `        
         <a class="article-col" href="article/${post.id}" article_id="${post.id}">
             <h2 class="article-cover" id="article_${post.id}" published='${post.published}'>
