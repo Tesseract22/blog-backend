@@ -84,6 +84,7 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
                 sw.onclick = editArticle;
                 let save = document.getElementById('save');
                 save.onclick = (ev) => __awaiter(this, void 0, void 0, function* () {
+                    content = document.getElementById('editor').value;
                     let response = yield fetch(`/post/${id}`, {
                         method: "PUT",
                         body: JSON.stringify({

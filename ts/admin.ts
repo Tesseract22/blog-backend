@@ -82,6 +82,7 @@ const handleLocation = async () => {
                 sw.onclick = editArticle
                 let save = document.getElementById('save')!
                 save.onclick = async (ev) => {
+                    content = (document.getElementById('editor')! as HTMLTextAreaElement).value
                     let response = await fetch(`/post/${id}`, {
                         method: "PUT",
                         body: JSON.stringify({
