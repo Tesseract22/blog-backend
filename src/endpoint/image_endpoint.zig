@@ -30,7 +30,7 @@ pub fn init(
     };
 }
 
-const SaveImageError = error{UnsupportedFormat, FileAccessError};
+const SaveImageError = error{UnsupportedFormat} || std.fs.File.OpenError || std.posix.MakeDirError || std.fs.Dir.OpenError || std.fs.File.WriteError;
 // TODO: Error handling
 // fn SaveImage(self: Self, id: usize, filename: []const u8, data: []const u8) SaveImageError![ImageFolder.len + 10 + 5]u8 {
 //     const time_stamp = std.time.microTimestamp();
@@ -61,13 +61,13 @@ fn SaveImage(self: Self, id: usize, filename: []const u8, data: []const u8) Save
     const id_buf = std.fmt.bufPrint(&buf, "{}", .{id}) catch unreachable;
     cwd.makeDir(id_buf) catch |e| switch (e) {
         std.posix.MakeDirError.PathAlreadyExists => {},
-        else => return SaveImageError.FileAccessError,
+        else => return e,
     };
-    var article_dir = self.image_dir.openDir(id_buf, .{}) catch return SaveImageError.FileAccessError;
+    var article_dir = try self.image_dir.openDir(id_buf, .{});
     defer article_dir.close();
-    var f = article_dir.createFile(filename, .{}) catch return SaveImageError.FileAccessError;
+    var f = try article_dir.createFile(filename, .{});
     defer f.close();
-    _ = f.write(data) catch return SaveImageError.FileAccessError;
+    _ = try f.write(data);
 }
 fn listImage(self: *Self) void {
     _ = self; // autofix
@@ -102,7 +102,9 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
                 zap.Request.HttpParam.Hash_Binfile => |*file| {
                     const filename = file.filename orelse "(no filename)";
                     const data = file.data orelse "";
-                    self.SaveImage(id, filename, data) catch return r.setStatus(.internal_server_error);
+                    self.SaveImage(id, filename, data) catch |err| {
+                        std.log.err("Failed to save image `{s}`: {}", .{filename, err});
+                        return r.setStatus(.internal_server_error);};
                     
                     // std.log.debug("    contents: {any}\n", .{data}); 
                 },
