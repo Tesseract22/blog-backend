@@ -120,13 +120,18 @@ function listImage(id) {
         let menu = getMenu();
         menu.style.display = 'none';
         let article_cont = document.getElementById("articles-container");
+        let copied_show = document.createElement("b");
+        copied_show.className = "image-dir";
+        // copied_show.id = "copied"
+        article_cont.appendChild(copied_show);
         let image_list = document.createElement("div");
         image_list.className = "image-dir";
         image_list.id = "image-dir";
         image_list.ondragenter = () => {
             image_list.style.backgroundColor = "darkseagreen";
         };
-        image_list.ondragover = () => {
+        image_list.ondragover = (ev) => {
+            ev.preventDefault();
             image_list.style.backgroundColor = "darkseagreen";
         };
         image_list.ondragleave = (ev) => {
@@ -158,7 +163,21 @@ function listImage(id) {
                     alert(`Failed to delete file: ${ev}`);
                 });
             };
+            let copy_btn = document.createElement("button");
+            copy_btn.className = "image-delete-btn";
+            copy_btn.onclick = (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                let btn = ev.target;
+                let item_div = btn.parentElement;
+                let href = item_div.getAttribute("href");
+                navigator.clipboard.writeText(href).then(() => {
+                    copied_show.innerText = `"${href}" copied!`;
+                });
+            };
+            copy_btn.style.backgroundColor = "blue";
             img_div.appendChild(delete_btn);
+            img_div.appendChild(copy_btn);
             image_list.append(img_div);
         };
         image_list.ondrop = (ev) => {

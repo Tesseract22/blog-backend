@@ -124,13 +124,21 @@ async function listImage(id: string | number) {
     let menu = getMenu()
     menu.style.display = 'none'
     let article_cont = document.getElementById("articles-container")!
+
+    let copied_show = document.createElement("b")
+    copied_show.className = "image-dir"
+    // copied_show.id = "copied"
+    article_cont.appendChild(copied_show)
+
+
     let image_list = document.createElement("div") as HTMLDivElement
     image_list.className = "image-dir"
     image_list.id = "image-dir"
     image_list.ondragenter = () => {
         image_list.style.backgroundColor = "darkseagreen"
     }
-    image_list.ondragover = () => {
+    image_list.ondragover = (ev) => {
+        ev.preventDefault()
         image_list.style.backgroundColor = "darkseagreen"
     }
     image_list.ondragleave = (ev: DragEvent) => {
@@ -163,7 +171,21 @@ async function listImage(id: string | number) {
                 alert(`Failed to delete file: ${ev}`)
             })
         }
+        let copy_btn = document.createElement("button") as HTMLButtonElement
+        copy_btn.className = "image-delete-btn"
+        copy_btn.onclick = (ev: MouseEvent) => {
+            ev.preventDefault()
+            ev.stopPropagation()
+            let btn = ev.target as HTMLElement
+            let item_div = btn.parentElement as HTMLAnchorElement
+            let href = item_div.getAttribute("href")!
+            navigator.clipboard.writeText(href).then(() => {
+                copied_show.innerText = `"${href}" copied!`
+            })
+        }
+        copy_btn.style.backgroundColor = "blue"
         img_div.appendChild(delete_btn)
+        img_div.appendChild(copy_btn)
 
         image_list.append(img_div)
     }
@@ -190,6 +212,8 @@ async function listImage(id: string | number) {
 
     images.forEach(appendImg)
     article_cont.appendChild(image_list)
+
+
 }
 
 window.onpopstate = handleLocation;
