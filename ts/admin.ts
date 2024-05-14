@@ -49,54 +49,64 @@ const route = (event) => {
 let content = ""
 
 const handleLocation = async () => {
-    const path_ = window.location.pathname;
-    const path = path_.slice(base.length, path_.length)
+    console.log("handle location")
+    if (window.location.pathname.slice(-1) === "/") {
+        window.location.pathname = window.location.pathname.slice(0, -1)
+        return
+    }
+    const path_ = window.location.pathname
+    const path = path_.slice(base.length)
 
+
+    const paths = path.split('/').slice(1)
+    console.log(path, paths)
+    
     if (path.length === 0) {
+        window.location.pathname += "/article"
+        return
+
+    }
+    if (paths.length === 1 && paths[0] == "article") {
         dirty = false
         return await listArticle(true)
     }
-    let match = (/^\/article\/(\d+)$/.exec(path) || [-1,-1])
-    let article_id = match[1] as number
-    let jump_id = window.location.hash
-    console.log(jump_id)
-    if (article_id > 0) {
-        if (jump_id !== "" && dirty) {
-            // scrollTo(0, document.getElementById(jump_id)!.offsetTop)
-        } else {
-            return loadArticle(article_id, (res: Post, id: string | number) => {
-                content = res.content!
-                let article_cont = getArticlesContainer()
-                let switch_s =         
-                `        
-                <label class="switch">
-                    <input type="checkbox">
-                    <span class="slider"  id="edit-switch"></span>
-                </label>`
-                let save_s = `<button id='save'>Save</button>`
-                
-                article_cont.appendChild(DOMFromStr(switch_s))
-                article_cont.appendChild(DOMFromStr(save_s))
+    if (paths.length === 2 && paths[0] === "article" && parseInt(paths[1]) >= 0) {
+        let article_id = parseInt(paths[1])
+        return loadArticle(article_id, (res: Post, id: string | number) => {
+            content = res.content!
+            let article_cont = getArticlesContainer()
+            let switch_s =         
+            `        
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"  id="edit-switch"></span>
+            </label>`
+            let save_s = `<button id='save'>Save</button>`
             
-                let sw = document.getElementById('edit-switch')!
-                sw.onclick = editArticle
-                let save = document.getElementById('save')!
-                save.onclick = async (ev) => {
-                    content = (document.getElementById('editor')! as HTMLTextAreaElement).value
-                    let response = await fetch(`/post/${id}`, {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            content: content
-                        })
+            article_cont.appendChild(DOMFromStr(switch_s))
+            article_cont.appendChild(DOMFromStr(save_s))
+        
+            let sw = document.getElementById('edit-switch')!
+            sw.onclick = editArticle
+            let save = document.getElementById('save')!
+            save.onclick = async (ev) => {
+                content = (document.getElementById('editor')! as HTMLTextAreaElement).value
+                let response = await fetch(`/post/${id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        content: content
                     })
-                    if (response.status !== 200) {
-                        console.warn("Cannot Save")
-                    } else {
-                        save.innerText = "Saved!"
-                    }
+                })
+                if (response.status !== 200) {
+                    console.warn("Cannot Save")
+                } else {
+                    save.innerText = "Saved!"
                 }
-            })
-        }
+            }
+        })
+
+    } else {
+        load404()
     }
 }
 

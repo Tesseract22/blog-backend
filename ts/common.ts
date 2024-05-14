@@ -13,6 +13,14 @@ interface Post {
     id: number,
 }
 
+function load404() {
+    let menu = getMenu()
+    menu.style.display = 'none'
+    let article_cont = document.getElementById("articles-container")!
+    article_cont.innerHTML =  "<b>404 Page Not Found!</b>"
+    article_cont.style.justifyContent = "center"
+}
+
 
 function timeConverter(UNIX_timestamp: number): string {
     var a = new Date(UNIX_timestamp * 1000);

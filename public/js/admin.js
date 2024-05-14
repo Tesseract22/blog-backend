@@ -54,52 +54,58 @@ const route = (event) => {
 // };
 let content = "";
 const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
+    console.log("handle location");
+    if (window.location.pathname.slice(-1) === "/") {
+        window.location.pathname = window.location.pathname.slice(0, -1);
+        return;
+    }
     const path_ = window.location.pathname;
-    const path = path_.slice(base.length, path_.length);
+    const path = path_.slice(base.length);
+    const paths = path.split('/').slice(1);
+    console.log(path, paths);
     if (path.length === 0) {
+        window.location.pathname += "/article";
+        return;
+    }
+    if (paths.length === 1 && paths[0] == "article") {
         dirty = false;
         return yield listArticle(true);
     }
-    let match = (/^\/article\/(\d+)$/.exec(path) || [-1, -1]);
-    let article_id = match[1];
-    let jump_id = window.location.hash;
-    console.log(jump_id);
-    if (article_id > 0) {
-        if (jump_id !== "" && dirty) {
-            // scrollTo(0, document.getElementById(jump_id)!.offsetTop)
-        }
-        else {
-            return loadArticle(article_id, (res, id) => {
-                content = res.content;
-                let article_cont = getArticlesContainer();
-                let switch_s = `        
-                <label class="switch">
-                    <input type="checkbox">
-                    <span class="slider"  id="edit-switch"></span>
-                </label>`;
-                let save_s = `<button id='save'>Save</button>`;
-                article_cont.appendChild(DOMFromStr(switch_s));
-                article_cont.appendChild(DOMFromStr(save_s));
-                let sw = document.getElementById('edit-switch');
-                sw.onclick = editArticle;
-                let save = document.getElementById('save');
-                save.onclick = (ev) => __awaiter(this, void 0, void 0, function* () {
-                    content = document.getElementById('editor').value;
-                    let response = yield fetch(`/post/${id}`, {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            content: content
-                        })
-                    });
-                    if (response.status !== 200) {
-                        console.warn("Cannot Save");
-                    }
-                    else {
-                        save.innerText = "Saved!";
-                    }
+    if (paths.length === 2 && paths[0] === "article" && parseInt(paths[1]) >= 0) {
+        let article_id = parseInt(paths[1]);
+        return loadArticle(article_id, (res, id) => {
+            content = res.content;
+            let article_cont = getArticlesContainer();
+            let switch_s = `        
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"  id="edit-switch"></span>
+            </label>`;
+            let save_s = `<button id='save'>Save</button>`;
+            article_cont.appendChild(DOMFromStr(switch_s));
+            article_cont.appendChild(DOMFromStr(save_s));
+            let sw = document.getElementById('edit-switch');
+            sw.onclick = editArticle;
+            let save = document.getElementById('save');
+            save.onclick = (ev) => __awaiter(this, void 0, void 0, function* () {
+                content = document.getElementById('editor').value;
+                let response = yield fetch(`/post/${id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        content: content
+                    })
                 });
+                if (response.status !== 200) {
+                    console.warn("Cannot Save");
+                }
+                else {
+                    save.innerText = "Saved!";
+                }
             });
-        }
+        });
+    }
+    else {
+        load404();
     }
 });
 window.onpopstate = handleLocation;

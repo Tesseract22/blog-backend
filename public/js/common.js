@@ -9,6 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+function load404() {
+    let menu = getMenu();
+    menu.style.display = 'none';
+    let article_cont = document.getElementById("articles-container");
+    article_cont.innerHTML = "<b>404 Page Not Found!</b>";
+    article_cont.style.justifyContent = "center";
+}
 function timeConverter(UNIX_timestamp) {
     var a = new Date(UNIX_timestamp * 1000);
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
