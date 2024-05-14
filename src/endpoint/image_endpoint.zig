@@ -56,10 +56,9 @@ const SaveImageError = error{UnsupportedFormat} || std.fs.File.OpenError || std.
 //     return name_buf[PublicFolder.len..].*;
 // }
 fn SaveImage(self: Self, id: usize, filename: []const u8, data: []const u8) SaveImageError!void {
-    const cwd = std.fs.cwd();
     var buf = [_]u8 {0} ** 20;
     const id_buf = std.fmt.bufPrint(&buf, "{}", .{id}) catch unreachable;
-    cwd.makeDir(id_buf) catch |e| switch (e) {
+    self.image_dir.makeDir(id_buf) catch |e| switch (e) {
         std.posix.MakeDirError.PathAlreadyExists => {},
         else => return e,
     };
