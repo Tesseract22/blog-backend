@@ -169,12 +169,16 @@ fn getImage(e: *zap.Endpoint, r: zap.Request) void {
 }
 
 fn deleteImage(e: *zap.Endpoint, r: zap.Request) void {
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
     std.log.debug("delete image {s}", .{r.query.?});
     r.parseQuery();
     const path = Util.pathRest(e.settings.path.len, r.getParamSlice("path") orelse return r.setStatus(.bad_request)) orelse return r.setStatus(.bad_request);
-    const self = @as(*Self, @fieldParentPtr("endpoint", e));
-    self.image_dir.deleteFile(path) catch |err| {
-        std.log.debug("Failed to delete file `{s}`: {}", .{path, err});
+    const size = std.base64.standard.Decoder.calcSizeForSlice(path) catch return r.setStatus(.bad_request);
+    const dest = self.alloc.alloc(u8, size) catch unreachable;
+    std.base64.standard.Decoder.decode(dest, path) catch r.setStatus(.bad_request);
+    std.log.debug("dest: {s}", .{dest});
+    self.image_dir.deleteFile(dest) catch |err| {
+        std.log.debug("Failed to delete file `{s}`: {}", .{dest, err});
         return r.setStatus(.bad_request);
     };
     r.markAsFinished(true);
