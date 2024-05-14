@@ -125,8 +125,8 @@ async function listImage(id: string | number) {
     menu.style.display = 'none'
     let article_cont = document.getElementById("articles-container")!
     let image_list = document.createElement("div") as HTMLDivElement
-    image_list.className = "image_dir"
-    image_list.id = "image_dir"
+    image_list.className = "image-dir"
+    image_list.id = "image-dir"
     image_list.ondragenter = () => {
         image_list.style.backgroundColor = "darkseagreen"
     }
@@ -138,9 +138,33 @@ async function listImage(id: string | number) {
     }
     let appendImg = (img: string) => {
         let img_div = document.createElement("a") as HTMLAnchorElement
-        img_div.innerText = img
+        let img_text = document.createElement("div") as HTMLDivElement
+        img_text.innerText = img
+        img_text.className = "image-text"
+        img_div.appendChild(img_text)
         img_div.href = `/image/${id}/${img}`
-        img_div.className = "image_dir_item"
+        img_div.className = "image-dir-item"
+
+        let delete_btn = document.createElement("button") as HTMLButtonElement
+        delete_btn.className = "image-delete-btn"
+        delete_btn.onclick = (ev: MouseEvent) => {
+            ev.preventDefault()
+            ev.stopPropagation()
+            let btn = ev.target as HTMLElement
+            let item_div = btn.parentElement as HTMLAnchorElement
+            fetch(`/image/${id}?path=${item_div.getAttribute("href")}`, {
+                method: "DELETE",
+
+            }).then((res) => {
+                if (res.status === 200) {
+                    item_div.parentElement?.removeChild(item_div)
+                }
+            }).catch((err) => {
+                alert(`Failed to delete file: ${ev}`)
+            })
+        }
+        img_div.appendChild(delete_btn)
+
         image_list.append(img_div)
     }
     image_list.ondrop = (ev: DragEvent) => {
@@ -162,6 +186,7 @@ async function listImage(id: string | number) {
             alert(`Failed to upload file '${file.name}': ${err}`)
         })
     }
+    
 
     images.forEach(appendImg)
     article_cont.appendChild(image_list)

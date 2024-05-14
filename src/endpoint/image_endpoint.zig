@@ -2,7 +2,7 @@ const std = @import("std");
 const zap = @import("zap");
 const Sqlite = @import("../sqlite.zig");
 const Data = @import("../data.zig");
-const idFromPath = @import("../util.zig").idFromPath;
+const Util = @import("../util.zig");
 const memeql = std.mem.eql;
 const Self = @This();
 const Config = @import("../config.zig");
@@ -23,6 +23,7 @@ pub fn init(
             .path = user_path,
             .post = postImage,
             .get = getImage,
+            .delete = deleteImage,
         }),
         .image_dir = std.fs.cwd().openDir(PublicFolder ++ ImageFolder, .{.iterate = true}) catch unreachable,
         .id = std.Thread.getCurrentId(),
@@ -77,7 +78,7 @@ pub fn getEndpoint(self: *Self) *zap.Endpoint {
     return &self.endpoint;
 }
 fn postIdFromPath(self: *Self, path: []const u8) ?usize {
-    return idFromPath(self.endpoint.settings.path.len, path);
+    return Util.idFromPath(self.endpoint.settings.path.len, path);
 }
 
 /// POST  /image/<i>
@@ -168,11 +169,14 @@ fn getImage(e: *zap.Endpoint, r: zap.Request) void {
 }
 
 fn deleteImage(e: *zap.Endpoint, r: zap.Request) void {
+    std.log.debug("delete image {s}", .{r.query.?});
+    r.parseQuery();
+    const path = Util.pathRest(e.settings.path.len, r.getParamSlice("path") orelse return r.setStatus(.bad_request)) orelse return r.setStatus(.bad_request);
     const self = @as(*Self, @fieldParentPtr("endpoint", e));
-    const path = r.path orelse return r.setStatus(.bad_request);
     self.image_dir.deleteFile(path) catch |err| {
         std.log.debug("Failed to delete file `{s}`: {}", .{path, err});
         return r.setStatus(.bad_request);
     };
+    r.markAsFinished(true);
     
 }

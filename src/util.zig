@@ -2,12 +2,14 @@ const std = @import("std");
 const zap = @import("zap");
 const Config = @import("config.zig");
 pub fn idFromPath(prefix_len: usize, path: []const u8) ?usize {
+        return std.fmt.parseUnsigned(usize, pathRest(prefix_len, path) orelse return null, 10) catch null;
+}
+pub fn pathRest(prefix_len: usize, path: []const u8) ?[]const u8 {
     if (path.len >= prefix_len + 2) {
         if (path[prefix_len] != '/') {
             return null;
         }
-        const idstr = path[prefix_len + 1 ..];
-        return std.fmt.parseUnsigned(usize, idstr, 10) catch null;
+        return path[prefix_len + 1 ..];
     }
     return null;
 }

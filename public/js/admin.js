@@ -121,8 +121,8 @@ function listImage(id) {
         menu.style.display = 'none';
         let article_cont = document.getElementById("articles-container");
         let image_list = document.createElement("div");
-        image_list.className = "image_dir";
-        image_list.id = "image_dir";
+        image_list.className = "image-dir";
+        image_list.id = "image-dir";
         image_list.ondragenter = () => {
             image_list.style.backgroundColor = "darkseagreen";
         };
@@ -134,9 +134,31 @@ function listImage(id) {
         };
         let appendImg = (img) => {
             let img_div = document.createElement("a");
-            img_div.innerText = img;
+            let img_text = document.createElement("div");
+            img_text.innerText = img;
+            img_text.className = "image-text";
+            img_div.appendChild(img_text);
             img_div.href = `/image/${id}/${img}`;
-            img_div.className = "image_dir_item";
+            img_div.className = "image-dir-item";
+            let delete_btn = document.createElement("button");
+            delete_btn.className = "image-delete-btn";
+            delete_btn.onclick = (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                let btn = ev.target;
+                let item_div = btn.parentElement;
+                fetch(`/image/${id}?path=${item_div.getAttribute("href")}`, {
+                    method: "DELETE",
+                }).then((res) => {
+                    var _a;
+                    if (res.status === 200) {
+                        (_a = item_div.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(item_div);
+                    }
+                }).catch((err) => {
+                    alert(`Failed to delete file: ${ev}`);
+                });
+            };
+            img_div.appendChild(delete_btn);
             image_list.append(img_div);
         };
         image_list.ondrop = (ev) => {
