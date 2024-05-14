@@ -105,9 +105,29 @@ const handleLocation = async () => {
             }
         })
 
-    } else {
+    } else if (paths.length === 2 && paths[0] === "image" && parseInt(paths[1]) >= 0) {
+        let article_id = parseInt(paths[1])
+        return listImage(article_id)
+    } 
+    else {
         load404()
     }
+}
+
+async function listImage(id: string | number) {
+    console.log("list image")
+    let images = await (await fetch(`/image/${id}`)).json() as [string]
+    console.log(images)
+    let menu = getMenu()
+    menu.style.display = 'none'
+    let article_cont = document.getElementById("articles-container")!
+    let image_list = document.createElement("div") as HTMLDivElement
+    images.forEach((img) => {
+        let img_div = document.createElement("div") as HTMLDivElement
+        img_div.innerText = img
+        image_list.append(img_div)
+    })
+    article_cont.appendChild(image_list)
 }
 
 window.onpopstate = handleLocation;

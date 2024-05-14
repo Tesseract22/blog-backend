@@ -13,6 +13,8 @@ interface Post {
     id: number,
 }
 
+
+
 function load404() {
     let menu = getMenu()
     menu.style.display = 'none'

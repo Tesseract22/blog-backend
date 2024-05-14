@@ -11,6 +11,7 @@ const ImageFolder = Config.ImageFolder;
 
 alloc: std.mem.Allocator,
 endpoint: zap.Endpoint,
+image_dir: std.fs.Dir,
 id: std.Thread.Id,
 pub fn init(
     a: std.mem.Allocator,
@@ -23,6 +24,7 @@ pub fn init(
             .post = postImage,
             .get = getImage,
         }),
+        .image_dir = std.fs.cwd().openDir(PublicFolder ++ ImageFolder, .{.iterate = true}) catch unreachable,
         .id = std.Thread.getCurrentId(),
     };
 }
@@ -132,25 +134,34 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
 
 fn getImage(e: *zap.Endpoint, r: zap.Request) void {
     const self = @as(*Self, @fieldParentPtr("endpoint", e));
-    std.log.debug("getImage", .{});
     const path = r.path orelse return r.setStatus(.bad_request);
     const id = self.postIdFromPath(path) orelse return r.setStatus(.bad_request);
+    std.log.debug("getImage on: {}", .{id});
+
     var buf = [_]u8 {0} ** 20;
     const id_buf = std.fmt.bufPrint(&buf, "{}", .{id}) catch unreachable;
-    var dir = std.fs.cwd().openDir(id_buf, .{.iterate = true}) catch |err| switch (err) {
+
+    var dir = self.image_dir.openDir(id_buf, .{.iterate = true}) catch |err| switch (err) {
         error.FileNotFound => 
             return r.sendJson("[]") catch r.setStatus(.internal_server_error),
         else => return r.setStatus(.internal_server_error),
     };
     defer dir.close();
     var list = std.ArrayList([]const u8).init(self.alloc);
-    defer list.deinit();
+    defer {
+        for (list.items) |s| {
+            self.alloc.free(s);
+        }
+        list.deinit();
+    }
     var it = dir.iterate();
     while (it.next() catch return r.setStatus(.internal_server_error)) |entry| {
         list.append(self.alloc.dupe(u8, entry.name) catch unreachable) catch r.setStatus(.internal_server_error);
     }
     const json = std.json.stringifyAlloc(self.alloc, list.items, .{}) catch return r.setStatus(.internal_server_error);
+    defer self.alloc.free(json);
     r.sendJson(json) catch r.setStatus(.internal_server_error);
+    r.markAsFinished(true);
 
     
     

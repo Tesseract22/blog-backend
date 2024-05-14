@@ -80,6 +80,16 @@ fn on_request(r: zap.Request) void {
 
                 const success = util.VerifyCookie(r);
                 if (!success) {
+                    const domain = switch (builtin.mode) {
+                        .Debug => null, // localhost
+                        else => Config.Domain,
+                    };
+                    r.setCookie(.{
+                        .name = "login-redirect",
+                        .value = r.path orelse "",
+                        .domain = domain,
+                        .path = "/"
+                    }) catch return r.setStatus(.internal_server_error);
                     return r.redirectTo("/login", null) catch break :blk;
                 }
                 return r.sendFile(Config.PublicFolder ++ "html/admin.html") catch break :blk;

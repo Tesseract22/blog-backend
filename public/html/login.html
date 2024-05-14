@@ -45,6 +45,17 @@
         </div>
     </nav>
     <script>
+        // js is so lame istg
+        function getCookie(name) {
+          let cookie = {};
+          document.cookie.split(';').forEach(function(el) {
+            let split = el.split('=');
+            cookie[split[0].trim()] = split.slice(1).join("=");
+          })
+          return name in cookie ? cookie[name] : undefined;
+        }
+        const value = getCookie("login-redirect") || "/admin"
+        console.log(value)
         async function submit() {
             warn.innerHTML = ''
             let password = document.getElementById('password').value
@@ -57,7 +68,8 @@
                 },
             })
             if (response.status == 200) {
-                window.location.href = "/admin"
+
+                window.location.href = value
             } else {
                 let login = document.getElementById('login')
                 let warn = document.getElementById('warn')
