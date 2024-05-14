@@ -164,7 +164,15 @@ fn getImage(e: *zap.Endpoint, r: zap.Request) void {
     defer self.alloc.free(json);
     r.sendJson(json) catch r.setStatus(.internal_server_error);
     r.markAsFinished(true);
-
     
+}
+
+fn deleteImage(e: *zap.Endpoint, r: zap.Request) void {
+    const self = @as(*Self, @fieldParentPtr("endpoint", e));
+    const path = r.path orelse return r.setStatus(.bad_request);
+    self.image_dir.deleteFile(path) catch |err| {
+        std.log.debug("Failed to delete file `{s}`: {}", .{path, err});
+        return r.setStatus(.bad_request);
+    };
     
 }
