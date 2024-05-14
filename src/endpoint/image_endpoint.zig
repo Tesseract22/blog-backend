@@ -138,8 +138,9 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
 
 fn getImage(e: *zap.Endpoint, r: zap.Request) void {
     const self = @as(*Self, @fieldParentPtr("endpoint", e));
+    if (!Util.VerifyCookie(r)) return;
     const path = r.path orelse return r.setStatus(.bad_request);
-    const id = self.postIdFromPath(path) orelse return r.setStatus(.bad_request);
+    const id = self.postIdFromPath(path) orelse return;
     std.log.debug("getImage on: {}", .{id});
 
     var buf = [_]u8 {0} ** 20;
