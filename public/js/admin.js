@@ -114,18 +114,52 @@ const handleLocation = () => __awaiter(this, void 0, void 0, function* () {
 });
 function listImage(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("list image");
+        loadCSS("image_dir");
         let images = yield (yield fetch(`/image/${id}`)).json();
         console.log(images);
         let menu = getMenu();
         menu.style.display = 'none';
         let article_cont = document.getElementById("articles-container");
         let image_list = document.createElement("div");
-        images.forEach((img) => {
-            let img_div = document.createElement("div");
+        image_list.className = "image_dir";
+        image_list.id = "image_dir";
+        image_list.ondragenter = () => {
+            image_list.style.backgroundColor = "darkseagreen";
+        };
+        image_list.ondragover = () => {
+            image_list.style.backgroundColor = "darkseagreen";
+        };
+        image_list.ondragleave = (ev) => {
+            image_list.style.backgroundColor = "";
+        };
+        let appendImg = (img) => {
+            let img_div = document.createElement("a");
             img_div.innerText = img;
+            img_div.href = `/image/${id}/${img}`;
+            img_div.className = "image_dir_item";
             image_list.append(img_div);
-        });
+        };
+        image_list.ondrop = (ev) => {
+            var _a, _b;
+            ev.preventDefault();
+            image_list.style.backgroundColor = "";
+            console.log((_a = ev.dataTransfer) === null || _a === void 0 ? void 0 : _a.files);
+            let file = (_b = ev.dataTransfer) === null || _b === void 0 ? void 0 : _b.files[0];
+            let formData = new FormData();
+            formData.append(file.name || "image.jpg", file);
+            fetch(`/image/${id}`, {
+                method: "POST",
+                body: formData,
+            }).then((res) => {
+                console.log("upload status:", res.status);
+                if (res.status === 200) {
+                    appendImg(file.name);
+                }
+            }).catch((err) => {
+                alert(`Failed to upload file '${file.name}': ${err}`);
+            });
+        };
+        images.forEach(appendImg);
         article_cont.appendChild(image_list);
     });
 }

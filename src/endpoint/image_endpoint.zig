@@ -55,7 +55,6 @@ const SaveImageError = error{UnsupportedFormat, FileAccessError};
 //     return name_buf[PublicFolder.len..].*;
 // }
 fn SaveImage(self: Self, id: usize, filename: []const u8, data: []const u8) SaveImageError!void {
-    _ = self; // autofix
     const cwd = std.fs.cwd();
     var buf = [_]u8 {0} ** 20;
     const id_buf = std.fmt.bufPrint(&buf, "{}", .{id}) catch unreachable;
@@ -63,7 +62,7 @@ fn SaveImage(self: Self, id: usize, filename: []const u8, data: []const u8) Save
         std.posix.MakeDirError.PathAlreadyExists => {},
         else => return SaveImageError.FileAccessError,
     };
-    var article_dir = cwd.openDir(id_buf, .{}) catch return SaveImageError.FileAccessError;
+    var article_dir = self.image_dir.openDir(id_buf, .{}) catch return SaveImageError.FileAccessError;
     defer article_dir.close();
     var f = article_dir.createFile(filename, .{}) catch return SaveImageError.FileAccessError;
     defer f.close();
@@ -88,12 +87,14 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
     const id = self.postIdFromPath(path) orelse return r.setStatus(.bad_request);
     r.parseBody() catch |err| {
         std.log.err("Parse Body error: {any}. Expected if body is empty", .{err});
+        return r.setStatus(.bad_request);
     };
     r.parseQuery();
 
     const params = r.parametersToOwnedList(self.alloc, false) catch unreachable;
     defer params.deinit();
     for (params.items) |kv| {
+        std.log.debug("param", .{});
         if (kv.value) |v| {
             switch (v) {
                 // single-file upload
@@ -126,6 +127,7 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
                     // } else |err| {
                     //     std.log.err("Error: {any}\n", .{err});
                     // }
+                    std.log.debug("unsupported param", .{});
                 },
             }
         }

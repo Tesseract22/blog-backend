@@ -114,19 +114,56 @@ const handleLocation = async () => {
     }
 }
 
+
+
+
 async function listImage(id: string | number) {
-    console.log("list image")
+    loadCSS("image_dir")
     let images = await (await fetch(`/image/${id}`)).json() as [string]
     console.log(images)
     let menu = getMenu()
     menu.style.display = 'none'
     let article_cont = document.getElementById("articles-container")!
     let image_list = document.createElement("div") as HTMLDivElement
-    images.forEach((img) => {
-        let img_div = document.createElement("div") as HTMLDivElement
+    image_list.className = "image_dir"
+    image_list.id = "image_dir"
+    image_list.ondragenter = () => {
+        image_list.style.backgroundColor = "darkseagreen"
+    }
+    image_list.ondragover = () => {
+        image_list.style.backgroundColor = "darkseagreen"
+    }
+    image_list.ondragleave = (ev: DragEvent) => {
+        image_list.style.backgroundColor = ""
+    }
+    let appendImg = (img: string) => {
+        let img_div = document.createElement("a") as HTMLAnchorElement
         img_div.innerText = img
+        img_div.href = `/image/${id}/${img}`
+        img_div.className = "image_dir_item"
         image_list.append(img_div)
-    })
+    }
+    image_list.ondrop = (ev: DragEvent) => {
+        ev.preventDefault()
+        image_list.style.backgroundColor = ""
+        console.log(ev.dataTransfer?.files)
+        let file = ev.dataTransfer?.files[0]!
+        let formData = new FormData()
+        formData.append(file.name || "image.jpg", file)
+        fetch(`/image/${id}`, {
+            method: "POST",
+            body: formData,
+        }).then((res) => {
+            console.log("upload status:", res.status)
+            if (res.status === 200) {
+                appendImg(file.name)
+            }
+        }).catch((err) => {
+            alert(`Failed to upload file '${file.name}': ${err}`)
+        })
+    }
+
+    images.forEach(appendImg)
     article_cont.appendChild(image_list)
 }
 

@@ -13,6 +13,14 @@ interface Post {
     id: number,
 }
 
+function loadCSS(name: string) {
+    let head = document.getElementsByTagName("head")[0]
+    let css = document.createElement("link") as HTMLLinkElement
+    css.rel = "stylesheet"
+    css.type = "text/css"
+    css.href = `/css/${name}.css`
+    head.appendChild(css)
+}
 
 
 function load404() {

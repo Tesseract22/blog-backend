@@ -9,6 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+function loadCSS(name) {
+    let head = document.getElementsByTagName("head")[0];
+    let css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.type = "text/css";
+    css.href = `/css/${name}.css`;
+    head.appendChild(css);
+}
 function load404() {
     let menu = getMenu();
     menu.style.display = 'none';
