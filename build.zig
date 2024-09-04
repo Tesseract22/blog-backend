@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) !void {
     const pass = b.option([]const u8, "pass", "Generating Password for admin");
     if (pass) |password| {
         const hash = std.hash_map.hashString(password);
-        const len = @typeInfo(@TypeOf(hash)).Int.bits / 4;
+        const len = @typeInfo(@TypeOf(hash)).int.bits / 4;
         var buf: [len]u8 = undefined;
         _ = std.fmt.bufPrint(&buf, "{x:0>16}", .{hash}) catch unreachable;
         var auth_file = try std.fs.cwd().createFile(b.pathFromRoot("src/auth"), .{});
@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) !void {
 
     const exe = b.addExecutable(.{
         .name = "backend",
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
         .optimize = optimize,
     });
