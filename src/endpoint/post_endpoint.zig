@@ -64,6 +64,10 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
         self.listPost(r, !VerifyCookie(r)) catch return r.setStatus(.internal_server_error);
         return r.setStatus(.ok);
     }
+    // get the ip from headers
+    // this must be done before we send the final result
+    const ip_str = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host");
+
     // post as in article post, not the method POST
     const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
     const post = (self.db.getPost(post_id, &aa) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
@@ -71,14 +75,14 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) catch return r.setStatus(.internal_server_error);
     r.sendJson(json) catch return r.setStatus(.internal_server_error);
     // storing ip
-    const ip_str = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host") orelse {
-        std.log.err("Unable to fetch ip in header", .{});
-        return r.setStatus(.ok);
-    };
-    const ip_addr = std.net.Ip4Address.parse(ip_str, 0) catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{ err, ip_str });
-    const ip_id = self.db.insertIpAddr(ip_addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
-    self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
-    self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
+    if (ip_str) |str| {
+        const ip_addr = std.net.Ip4Address.parse(str, 0) catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{ err, str });
+        const ip_id = self.db.insertIpAddr(ip_addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
+        self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
+        self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
+    } else {
+        std.log.warn("Unable to get IP from header", .{});
+    }
     return r.setStatus(.ok);
 }
 
