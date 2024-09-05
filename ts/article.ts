@@ -15,15 +15,12 @@ const route = (event) => {
 
 };
 
-
+const base = ""
 const handleLocation = async (ev?: PopStateEvent) => {
     const path = window.location.pathname;
-    if (path === "/") {
-        await listArticle(false)
-        return
-    }
-    let article_id = (/^\/article\/(\d+)$/.exec(path) || [-1,-1])[1] as number
-    if (article_id > 0) loadArticle(article_id)
+    if (path === "/") return await listArticle(false)
+    let article_id = (/^\/article\/(\d+)$(\/)?/.exec(path) || [-1,-1])[1] as number
+    if (article_id > 0) {return loadArticle(article_id)}
 }
 
 window.onpopstate = handleLocation;

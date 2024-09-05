@@ -15,15 +15,15 @@ const route = (event) => {
     window.history.pushState({}, "", href);
     handleLocation();
 };
+const base = "";
 const handleLocation = (ev) => __awaiter(this, void 0, void 0, function* () {
     const path = window.location.pathname;
-    if (path === "/") {
-        yield listArticle(false);
-        return;
+    if (path === "/")
+        return yield listArticle(false);
+    let article_id = (/^\/article\/(\d+)$(\/)?/.exec(path) || [-1, -1])[1];
+    if (article_id > 0) {
+        return loadArticle(article_id);
     }
-    let article_id = (/^\/article\/(\d+)$/.exec(path) || [-1, -1])[1];
-    if (article_id > 0)
-        loadArticle(article_id);
 });
 window.onpopstate = handleLocation;
 window.onload = (ev) => {

@@ -6,7 +6,9 @@ const util = @import("util.zig");
 const Sqlite = @import("sqlite.zig");
 const Config = @import("config.zig");
 const memeql = std.mem.eql;
-// this is just to demo that we can catch arbitrary slugs
+// this is just to demo that we can catch arbitrary slug
+//s
+
 const SubPath = enum {
     article,
     login,
@@ -18,7 +20,7 @@ const SubPath = enum {
     };
     pub fn match(path: []const u8) ?MatchResult {
         const type_info = @typeInfo(SubPath);
-        inline for (type_info.Enum.fields) |f| {
+        inline for (type_info.@"enum".fields) |f| {
             if (std.mem.startsWith(u8, path, f.name)) {
                 return .{ .keyword = @enumFromInt(f.value), .remain = path[f.name.len..] };
             }
@@ -26,7 +28,7 @@ const SubPath = enum {
         return null;
     }
 };
-var rand = std.rand.DefaultPrng.init(0);
+var rand = std.Random.DefaultPrng.init(0);
 fn on_request(r: zap.Request) void {
     blk: {
         const path = (r.path orelse break :blk)[1..];
@@ -119,7 +121,7 @@ pub fn main() !void {
                 .log = true,
                 .public_folder = Config.PublicFolder,
                 .max_clients = 100000,
-                .max_body_size = 100 * 1024 * 1024,
+                .max_body_size = 5 * 1024 * 1024,
             },
         );
         defer listener.deinit();

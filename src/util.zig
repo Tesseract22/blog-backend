@@ -31,7 +31,7 @@ pub fn GetSessionCookie(r: zap.Request) ?u64 {
         std.log.err("Cookie Allocation Failed: {any}\n", .{e});
         return null;
     } orelse {
-        std.log.err("No Cookie named `" ++ Config.AdminCookieName ++ "`\n", .{});
+        // std.log.err("No Cookie named `" ++ Config.AdminCookieName ++ "`\n", .{});
         return null;
     };
     defer cookie_wrap.deinit();
