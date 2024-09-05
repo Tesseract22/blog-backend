@@ -37,7 +37,8 @@ fn on_request(r: zap.Request) void {
         const match = SubPath.match(sec) orelse break :blk;
         switch (match.keyword) {
             .article => {
-                std.log.info("{s}", .{r.getHeader("X-Forwarded-For") orelse "Not header named X-Forwarded-For"});
+                const ip = r.getHeader("X-Forwarded-For") orelse r.getHeader("RemoteAddr") orelse r.getHeader("X-Real-Ip");
+                std.log.debug("{s}", .{ip orelse "Not header named X-Forwarded-For"});
                 const id = it.next() orelse "";
                 if (id.len > 0) {
                     r.sendFile(Config.PublicFolder ++ "index.html") catch break :blk;
