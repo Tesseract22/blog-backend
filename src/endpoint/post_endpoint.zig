@@ -75,7 +75,7 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     const ip_addr = std.net.Ip4Address.parse(ip_str, 0) catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{ err, ip_str });
     const ip_id = self.db.insertIpAddr(ip_addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
     self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
-    Sqlite.updatePostViews(post_id, 1);
+    self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
     return r.setStatus(.ok);
 }
 
