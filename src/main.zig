@@ -37,8 +37,6 @@ fn on_request(r: zap.Request) void {
         const match = SubPath.match(sec) orelse break :blk;
         switch (match.keyword) {
             .article => {
-                const ip = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host");
-                std.log.err("{s}", .{ip orelse "Not header named X-Forwarded-For"});
                 const id = it.next() orelse "";
                 if (id.len > 0) {
                     r.sendFile(Config.PublicFolder ++ "index.html") catch break :blk;
@@ -87,12 +85,7 @@ fn on_request(r: zap.Request) void {
                         .Debug => null, // localhost
                         else => Config.Domain,
                     };
-                    r.setCookie(.{
-                        .name = "login-redirect",
-                        .value = r.path orelse "",
-                        .domain = domain,
-                        .path = "/"
-                    }) catch return r.setStatus(.internal_server_error);
+                    r.setCookie(.{ .name = "login-redirect", .value = r.path orelse "", .domain = domain, .path = "/" }) catch return r.setStatus(.internal_server_error);
                     return r.redirectTo("/login", null) catch break :blk;
                 }
                 return r.sendFile(Config.PublicFolder ++ "html/admin.html") catch break :blk;
