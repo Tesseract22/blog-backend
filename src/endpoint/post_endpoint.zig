@@ -52,34 +52,31 @@ fn trimPath(path: []const u8) []const u8 {
 /// GET /post/<id> => post[<id>]
 /// GET /post => []post
 /// else => bad_request
-fn getPost(end: *zap.Endpoint, req: zap.Request) void {
-    const status = struct {
-        pub fn handle(e: *zap.Endpoint, r: zap.Request) zap.StatusCode {
-            const self = @as(*Self, @fieldParentPtr("endpoint", e));
-            var aa = std.heap.ArenaAllocator.init(self.alloc);
-            defer aa.deinit();
-            if (r.path) |path| {
-                // /users
-                const path_trim = trimPath(path);
+fn getPost(e: *zap.Endpoint, r: zap.Request) void {
+    const self: *Self = @fieldParentPtr("endpoint", e);
+    var aa = std.heap.ArenaAllocator.init(self.alloc);
+    defer aa.deinit();
+    const path = r.path orelse return r.setStatus(.bad_request);
+    // /users
+    const path_trim = trimPath(path);
 
-                if (path_trim.len == e.settings.path.len) {
-                    self.listPost(r, !VerifyCookie(r)) catch return .internal_server_error;
-                    return .ok;
-                }
+    if (path_trim.len == e.settings.path.len) {
+        self.listPost(r, !VerifyCookie(r)) catch return r.setStatus(.internal_server_error);
+        return r.setStatus(.ok);
+    }
+    // post as in article post, not the method POST
+    const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
+    const post = (self.db.getPost(post_id, &aa) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
+    if (!post.published.? and !VerifyCookie(r)) return r.setStatus(.unauthorized);
+    const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) catch return r.setStatus(.internal_server_error);
+    r.sendJson(json) catch return r.setStatus(.internal_server_error);
+    // storing ip
+    const ip_str = r.getHeader("x-real-ip") orelse return std.log.warn("No header named \"x-real-ip\"", .{});
+    const ip_addr = std.net.Ip4Address.parse(ip_str, 0) catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{ err, ip_str });
+    const ip_id = self.db.insertIpAddr(ip_addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
+    self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
 
-                if (self.postIdFromPath(path_trim)) |id| {
-                    const post = (self.db.getPost(id, &aa) catch return .internal_server_error) orelse return .not_found;
-                    if (!post.published.? and !VerifyCookie(r)) return .unauthorized;
-                    const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) catch return .internal_server_error;
-                    r.sendJson(json) catch return .internal_server_error;
-                }
-                return .ok;
-            } else {
-                return .bad_request;
-            }
-        }
-    }.handle(end, req);
-    req.setStatus(status);
+    return r.setStatus(.ok);
 }
 
 fn listPost(self: *Self, r: zap.Request, published_only: bool) !void {
@@ -97,7 +94,7 @@ fn postPost(e: *zap.Endpoint, r: zap.Request) void {
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         var post = std.json.parseFromSlice(Post, self.alloc, body, .{}) catch |err| {
-            std.log.err("[{}] Failedt to parse Json: {s}", .{err, body});
+            std.log.err("[{}] Failedt to parse Json: {s}", .{ err, body });
             return r.setStatus(.bad_request);
         };
         defer post.deinit();
