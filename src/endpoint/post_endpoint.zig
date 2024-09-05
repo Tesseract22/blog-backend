@@ -71,7 +71,10 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     const json = std.json.stringifyAlloc(aa.allocator(), post, .{}) catch return r.setStatus(.internal_server_error);
     r.sendJson(json) catch return r.setStatus(.internal_server_error);
     // storing ip
-    const ip_str = r.getHeader("x-real-ip") orelse return std.log.warn("No header named \"x-real-ip\"", .{});
+    const ip_str = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host") orelse {
+        std.log.err("Unable to fetch ip in header", .{});
+        return r.setStatus(.ok);
+    };
     const ip_addr = std.net.Ip4Address.parse(ip_str, 0) catch |err| return std.log.warn("{any} Can not parse {s} as \"ip\"", .{ err, ip_str });
     const ip_id = self.db.insertIpAddr(ip_addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
     self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
