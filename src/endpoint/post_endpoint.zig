@@ -68,7 +68,6 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     // this must be done before we send the final result
     const ip_str = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host") orelse "";
     const ip_addr: ?std.net.Ip4Address = std.net.Ip4Address.parse(ip_str, 0) catch null;
-    std.log.warn("{s} ip: {s}", .{path, ip_str});
     // post as in article post, not the method POST
     const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
     const post = (self.db.getPost(post_id, &aa) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
@@ -78,7 +77,7 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     // storing ip
     if (ip_addr) |addr| {
         const ip_id = self.db.insertIpAddr(addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
-        self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp()) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
+        self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp() / 1000) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
         self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
     } else {
         std.log.warn("Unable to get IP from header", .{});
