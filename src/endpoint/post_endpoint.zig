@@ -6,6 +6,7 @@
 //! DELETE /post/<id> <= JSON(post)
 //! See also: `Post`
 const std = @import("std");
+const builtin = @import("builtin");
 const zap = @import("zap");
 const Sqlite = @import("../sqlite.zig");
 const SqliteError = Sqlite.SqliteError;
@@ -67,7 +68,7 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     }
     // get the ip from headers
     // this must be done before we send the final result
-    const ip_str = r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host") orelse "";
+    const ip_str = if (builtin.mode == .Debug) "127.0.0.1" else r.getHeader("x-forwarded-for") orelse r.getHeader("remote_addr") orelse r.getHeader("x-real-ip") orelse r.getHeader("host") orelse "";
     const ip_addr: ?std.net.Ip4Address = std.net.Ip4Address.parse(ip_str, 0) catch null;
     // post as in article post, not the method POST
     const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
@@ -82,7 +83,7 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
             self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
         } else |err| {
             switch (err) {
-                SqliteError.SQLiteConstraintUnique => {},
+                SqliteError.SQLiteConstraint => {},
                 else => std.log.warn("Unexpected error {} while inserting into ipmap", .{err}),
             }
         }
