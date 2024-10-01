@@ -7,6 +7,8 @@ const Commenter = data.Commenter;
 const Arena = std.heap.ArenaAllocator;
 const Sqlite = @This();
 db: sqlite.Db,
+
+pub const SqliteError = sqlite.Error;
 pub fn init() !Sqlite {
     var res = Sqlite{ .db = undefined };
 
@@ -249,7 +251,7 @@ pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
 
 pub fn insertIpMap(self: *Sqlite, ip_id: usize, post_id: usize, time: i64) !void {
     const q =
-        \\ INSERT OR IGNORE INTO IPMAP (IPID, POSTID, TIME) values (?, ?, ?)
+        \\ INSERT ON INTO IPMAP (IPID, POSTID, TIME) values (?, ?, ?) ON CONFLICT (IPID, POSTID) ABORT
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
