@@ -77,7 +77,7 @@ fn getPost(e: *zap.Endpoint, r: zap.Request) void {
     // storing ip
     if (ip_addr) |addr| {
         const ip_id = self.db.insertIpAddr(addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
-        self.db.insertIpMap(ip_id, post_id, std.time.microTimestamp() / 1000) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
+        self.db.insertIpMap(ip_id, post_id, @divTrunc(std.time.microTimestamp(), 1000)) catch |err| return std.log.warn("{any} Unexpected Error while storing ip records", .{err});
         self.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
     } else {
         std.log.warn("Unable to get IP from header", .{});
