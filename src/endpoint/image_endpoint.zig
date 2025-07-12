@@ -9,20 +9,16 @@ const Config = @import("../config.zig");
 const PublicFolder = Config.PublicFolder;
 const ImageFolder = Config.ImageFolder;
 
-alloc: std.mem.Allocator,
-endpoint: zap.Endpoint,
+path: []const u8,
 id: std.Thread.Id,
+error_strategy: zap.Endpoint.ErrorStrategy = .log_to_console,
+
+
 pub fn init(
-    a: std.mem.Allocator,
-    user_path: []const u8,
+    path: []const u8,
 ) Self {
     return .{
-        .alloc = a,
-        .endpoint = zap.Endpoint.init(.{
-            .path = user_path,
-            .post = postImage,
-            .get = getImage,
-        }),
+        .path = path,
         .id = std.Thread.getCurrentId(),
     };
 }
@@ -53,19 +49,13 @@ fn SaveImage(self: Self, filename: []const u8, data: []const u8) SaveImageError!
     return name_buf[PublicFolder.len..].*;
 }
 
-pub fn getEndpoint(self: *Self) *zap.Endpoint {
-    return &self.endpoint;
-}
-
-fn postImage(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @fieldParentPtr(Self, "endpoint", e);
-
+pub fn post(self: *Self, arena: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
     r.parseBody() catch |err| {
         std.log.err("Parse Body error: {any}. Expected if body is empty", .{err});
     };
     r.parseQuery();
 
-    const params = r.parametersToOwnedList(self.alloc, false) catch unreachable;
+    const params = r.parametersToOwnedList(arena) catch unreachable;
     defer params.deinit();
     for (params.items) |kv| {
         if (kv.value) |v| {
@@ -107,9 +97,7 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
     }
 }
 
-fn getImage(e: *zap.Endpoint, r: zap.Request) void {
-    _ = e;
-    std.log.debug("getImage", .{});
+pub fn get(_: *Self, _: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
     const path = r.path orelse return r.setStatus(.not_found);
     const ext = std.fs.path.extension(path);
     const name = path[0 .. path.len - ext.len];
@@ -117,3 +105,9 @@ fn getImage(e: *zap.Endpoint, r: zap.Request) void {
     if (!std.mem.eql(u8, ext, ".webp")) return r.setStatus(.not_found);
     return;
 }
+
+pub fn put(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn delete(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn patch(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
