@@ -9,23 +9,18 @@ const Config = @import("../config.zig");
 const PublicFolder = Config.PublicFolder;
 const ImageFolder = Config.ImageFolder;
 
-alloc: std.mem.Allocator,
-endpoint: zap.Endpoint,
 image_dir: std.fs.Dir,
+path: []const u8,
 id: std.Thread.Id,
+error_strategy: zap.Endpoint.ErrorStrategy = .log_to_console,
+
+
 pub fn init(
-    a: std.mem.Allocator,
-    user_path: []const u8,
+    path: []const u8,
 ) Self {
     return .{
-        .alloc = a,
-        .endpoint = zap.Endpoint.init(.{
-            .path = user_path,
-            .post = postImage,
-            .get = getImage,
-            .delete = deleteImage,
-        }),
         .image_dir = std.fs.cwd().openDir(PublicFolder ++ ImageFolder, .{.iterate = true}) catch unreachable,
+        .path = path,
         .id = std.Thread.getCurrentId(),
     };
 }
@@ -73,25 +68,19 @@ fn listImage(self: *Self) void {
     
 }
 
-pub fn getEndpoint(self: *Self) *zap.Endpoint {
-    return &self.endpoint;
-}
 fn postIdFromPath(self: *Self, path: []const u8) ?usize {
     return Util.idFromPath(self.endpoint.settings.path.len, path);
 }
 
 /// POST  /image/<i>
-fn postImage(e: *zap.Endpoint, r: zap.Request) void {
-    const self = @as(*Self, @fieldParentPtr("endpoint", e));
-    const path = r.path orelse return r.setStatus(.bad_request);
-    const id = self.postIdFromPath(path) orelse return r.setStatus(.bad_request);
+pub fn post(self: *Self, arena: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
     r.parseBody() catch |err| {
         std.log.err("Parse Body error: {any}. Expected if body is empty", .{err});
         return r.setStatus(.bad_request);
     };
     r.parseQuery();
 
-    const params = r.parametersToOwnedList(self.alloc, false) catch unreachable;
+    const params = r.parametersToOwnedList(arena) catch unreachable;
     defer params.deinit();
     for (params.items) |kv| {
         std.log.debug("param", .{});
@@ -101,6 +90,7 @@ fn postImage(e: *zap.Endpoint, r: zap.Request) void {
                 zap.Request.HttpParam.Hash_Binfile => |*file| {
                     const filename = file.filename orelse "(no filename)";
                     const data = file.data orelse "";
+                    const id = 10;
                     self.SaveImage(id, filename, data) catch |err| {
                         std.log.err("Failed to save image `{s}`: {}", .{filename, err});
                         return r.setStatus(.internal_server_error);};
@@ -182,5 +172,19 @@ fn deleteImage(e: *zap.Endpoint, r: zap.Request) void {
         return r.setStatus(.bad_request);
     };
     r.markAsFinished(true);
-    
+}    
+
+pub fn get(_: *Self, _: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
+    const path = r.path orelse return r.setStatus(.not_found);
+    const ext = std.fs.path.extension(path);
+    const name = path[0 .. path.len - ext.len];
+    std.log.info("{s} {s}", .{ name, ext });
+    if (!std.mem.eql(u8, ext, ".webp")) return r.setStatus(.not_found);
+    return;
 }
+
+pub fn put(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn delete(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn patch(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
+pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}

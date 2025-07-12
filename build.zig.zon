@@ -1,16 +1,17 @@
 .{
-    .name = "backend",
+    .name = .backend,
     .version = "0.0.1",
     .paths = .{"src"},
     .dependencies = .{
         // zap v0.1.14-pre
         .zap = .{
-            .url = "https://github.com/zigzap/zap/archive/f6799be60fdd1b14ab60fc23d4b8a2b7a0e6c8cc.tar.gz",
-            .hash = "12209936c3333b53b53edcf453b1670babb9ae8c2197b1ca627c01e72670e20c1a21",
+            .url = "https://github.com/zigzap/zap/archive/v0.10.1.tar.gz",
+            .hash = "zap-0.9.1-GoeB84M8JACjZKDNq2LA5hB24Z-ZrZ_HUKRXd8qxL2JW",
         },
         .sqlite = .{
-            .url = "https://github.com/vrischmann/zig-sqlite/archive/5be81150bb66e2a4813ebdd2ea9073d7ac19a8c8.tar.gz",
-            .hash = "12206604ba08d474910d54cd9f049bc16c75e8059101d2357e2b3560c4fbdb6610cb",
+            .url = "https://github.com/vrischmann/zig-sqlite/archive/be8b4965b46fc1a7a819bf3cba09f370c0e9c64c.tar.gz",
+            .hash = "sqlite-3.48.0-F2R_a9GLDgAXT-c49TfkFMt6yPOMQAYfp4ig8bRNdZs4",
         },
     },
+    .fingerprint = 0x8fe5c9711265edb4,
 }

@@ -27,15 +27,14 @@ pub fn GetSessionCookie(r: zap.Request) ?u64 {
     r.parseCookies(false);
     var buf = [_]u8{0} ** 256;
     var fba = std.heap.FixedBufferAllocator.init(&buf);
-    var cookie_wrap = r.getCookieStr(fba.allocator(), Config.AdminCookieName, false) catch |e| {
+    const cookie = r.getCookieStr(fba.allocator(), Config.AdminCookieName) catch |e| {
         std.log.err("Cookie Allocation Failed: {any}\n", .{e});
         return null;
     } orelse {
         // std.log.err("No Cookie named `" ++ Config.AdminCookieName ++ "`\n", .{});
         return null;
     };
-    defer cookie_wrap.deinit();
-    return std.fmt.parseInt(u64, cookie_wrap.str, 10) catch return null;
+    return std.fmt.parseInt(u64, cookie, 10) catch return null;
 }
 pub fn VerifyCookie(r: zap.Request) bool {
     const c = GetSessionCookie(r) orelse return false;

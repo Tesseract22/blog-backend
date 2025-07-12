@@ -5,6 +5,7 @@ const Post = data.Post;
 const Comment = data.Comment;
 const Commenter = data.Commenter;
 const Arena = std.heap.ArenaAllocator;
+const Allocator = std.mem.Allocator;
 const Sqlite = @This();
 db: sqlite.Db,
 
@@ -62,29 +63,29 @@ pub fn deletePost(self: *Sqlite, id: usize) !void {
     try stmt.exec(.{}, .{ .id = id });
 }
 
-pub fn listPostPublished(self: *Sqlite, arena: *Arena) ![]Post {
+pub fn listPostPublished(self: *Sqlite, arena: Allocator) ![]Post {
     const q =
         \\ SELECT 
         \\ CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST WHERE PUBLISHED != 0
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    const rows = try stmt.all(Post, arena.allocator(), .{}, .{});
+    const rows = try stmt.all(Post, arena, .{}, .{});
     return rows;
 }
 
-pub fn listPost(self: *Sqlite, arena: *Arena) ![]Post {
+pub fn listPost(self: *Sqlite, arena: Allocator) ![]Post {
     const q =
         \\ SELECT 
         \\ CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    const rows = try stmt.all(Post, arena.allocator(), .{}, .{});
+    const rows = try stmt.all(Post, arena, .{}, .{});
     return rows;
 }
 
-pub fn getPostMeta(self: *Sqlite, id: usize, arena: *Arena) !?Post {
+pub fn getPostMeta(self: *Sqlite, id: usize, arena: Allocator) !?Post {
     const q =
         \\ SELECT 
         \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, "", PUBLISHED, COVER_URL, ROWID FROM POST 
@@ -92,11 +93,11 @@ pub fn getPostMeta(self: *Sqlite, id: usize, arena: *Arena) !?Post {
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    const row = try stmt.oneAlloc(Post, arena.allocator(), .{}, .{ .ID = id });
+    const row = try stmt.oneAlloc(Post, arena, .{}, .{ .ID = id });
     return row;
 }
 
-pub fn getPost(self: *Sqlite, id: usize, arena: *Arena) !?Post {
+pub fn getPost(self: *Sqlite, id: usize, arena: Allocator) !?Post {
     const q =
         \\ SELECT 
         \\  CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, PUBLISHED, COVER_URL, ROWID FROM POST 
@@ -104,7 +105,7 @@ pub fn getPost(self: *Sqlite, id: usize, arena: *Arena) !?Post {
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    const row = try stmt.oneAlloc(Post, arena.allocator(), .{}, .{ .ID = id });
+    const row = try stmt.oneAlloc(Post, arena, .{}, .{ .ID = id });
     return row;
 }
 
@@ -137,7 +138,7 @@ pub fn updatePostViews(self: *Sqlite, id: usize, increment: usize) !void {
     try stmt.exec(.{}, .{ increment, id });
 }
 
-pub fn getCommentsByPost(self: *Sqlite, post_id: usize, arena: *Arena) ![]data.CommentFull {
+pub fn getCommentsByPost(self: *Sqlite, post_id: usize, arena: Allocator) ![]data.CommentFull {
     const q =
         \\SELECT COMMENT.*,COMMENTER.USERNAME,COMMENT.ROWID
         \\  FROM COMMENT 
@@ -146,10 +147,10 @@ pub fn getCommentsByPost(self: *Sqlite, post_id: usize, arena: *Arena) ![]data.C
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    return stmt.all(data.CommentFull, arena.allocator(), .{}, .{ .id = post_id });
+    return stmt.all(data.CommentFull, arena, .{}, .{ .id = post_id });
 }
 
-pub fn getCommentsById(self: *Sqlite, post_id: usize, arena: *Arena) ![]Comment {
+pub fn getCommentsById(self: *Sqlite, post_id: usize, arena: Allocator) ![]Comment {
     _ = arena;
     _ = post_id;
     _ = self;
@@ -222,13 +223,13 @@ pub fn getCommenterId(self: *Sqlite, commenter: Commenter) !?usize {
     return stmt.one(usize, .{}, .{ commenter.email, commenter.username });
 }
 
-pub fn getCommenterById(self: *Sqlite, id: usize, arena: *Arena) !?Commenter {
+pub fn getCommenterById(self: *Sqlite, id: usize, arena: Allocator) !?Commenter {
     const q =
         \\SELECT *, ROWID FROM COMMENTER WHERE ROWID = ?
     ;
     var stmt = self.db.prepare(q) catch unreachable;
     defer stmt.deinit();
-    return stmt.oneAlloc(Commenter, arena.allocator(), .{}, .{id});
+    return stmt.oneAlloc(Commenter, arena, .{}, .{id});
 }
 
 pub fn insertIpAddr(self: *Sqlite, ip: u32) !usize {
