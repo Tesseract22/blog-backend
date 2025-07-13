@@ -103,13 +103,13 @@ pub fn main() !void {
     defer db.deinit();
     {   
         const App = zap.App.Create(Sqlite);
-        var app = try App.init(allocator, &db, .{});
-        defer app.deinit();
+        try App.init(allocator, &db, .{});
+        defer App.deinit();
 
         //var index_end = IndexEndPoint { .path = "/" };
         var post_end = Enpoint.PostEndPoint { .path = "/post" };
         ////_ = Enpoint.CommentEndPoint {.path = "/comment" };
-        ////_ = Enpoint.ImageEndPoint.init("/image");
+        var image_end = Enpoint.ImageEndPoint.init("/image");
 
         //var listener = zap.HttpListener.init(.{
         //    .interface = Config.Interface,
@@ -118,30 +118,29 @@ pub fn main() !void {
         //    .public_folder = Config.PublicFolder,
         //    .max_body_size = 100 * 1024 * 1024, 
         //});
-
         //try listener.listen();
 
-        //try app.register(&index_end);
-        try app.register(&post_end);
+        try App.register(&post_end);
+        try App.register(&image_end);
+        //try app.register(&auth_end);
         //try app.register(&comment_end);
         //try app.register(&image_end);
 
-        try app.listen(.{
+        try App.listen(.{
             .interface = Config.Interface,
-            .port = Config.ApiPort,
+            .port = Config.Port,
             //.on_request = on_request,
             .public_folder = Config.PublicFolder,
             .max_body_size = 100 * 1024 * 1024, 
         });
-
-        std.log.debug("Web Starting at {s}:{}", .{Config.Interface, Config.Port});
-        std.log.debug("Api Starting at {s}:{}", .{Config.Interface, Config.ApiPort});
+        
+        //std.log.debug("Web Starting at {s}:{}", .{Config.Interface, Config.Port});
+        std.log.debug("Starting at {s}:{}", .{Config.Interface, Config.Port});
 
 
         zap.start(.{
             .threads = 2,
             .workers = 1,
         });
-        // show potential memory leaks when ZAP is shut down
     }
 }
