@@ -182,9 +182,3 @@ pub fn get(_: *Self, _: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
     if (!std.mem.eql(u8, ext, ".webp")) return r.setStatus(.not_found);
     return;
 }
-
-pub fn put(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn delete(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn patch(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}

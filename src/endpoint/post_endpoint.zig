@@ -139,6 +139,3 @@ pub fn delete(self: *Self, _: std.mem.Allocator, db: *Sqlite, r: zap.Request) !v
     r.setStatus(.bad_request);
 }
 
-pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-// TODO: retrieve post metadata with HEAD
-pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
