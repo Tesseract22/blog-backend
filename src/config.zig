@@ -12,6 +12,6 @@ pub const Interface = switch (builtin.mode) {
     .Debug => "127.0.0.1",
     else => "0.0.0.0",
 };
-pub const Domain = "tesseract-cat.com";
+pub const Domain = @embedFile("domain");
 pub const AdminCookieName = "admin-cookie";
 pub const DbPath = if (builtin.mode == .Debug) "test.db" else "blog.db";

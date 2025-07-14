@@ -3,9 +3,11 @@ const std = @import("std");
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const pass = b.option([]const u8, "pass", "Generating Password for admin");
-    if (pass) |password| {
-        const hash = std.hash_map.hashString(password);
+    const password = b.option([]const u8, "password", "Generating Password for admin");
+    const domain = b.option([]const u8, "domain", "Domain for the website, default to localhost in debug mode");
+
+    if (password) |password_value| {
+        const hash = std.hash_map.hashString(password_value);
         const len = @typeInfo(@TypeOf(hash)).int.bits / 4;
         var buf: [len]u8 = undefined;
         _ = std.fmt.bufPrint(&buf, "{x:0>16}", .{hash}) catch unreachable;
@@ -13,8 +15,11 @@ pub fn build(b: *std.Build) !void {
         defer auth_file.close();
         _ = try auth_file.writeAll(&buf);
     }
-
-    const exe = b.addExecutable(.{
+    if (domain) |domain_value| {
+        var file = try std.fs.cwd().createFile(b.pathFromRoot("src/domain"), .{});
+        defer file.close();
+        _ = try file.writeAll(domain_value);
+    }    const exe = b.addExecutable(.{
         .name = "backend",
         .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
