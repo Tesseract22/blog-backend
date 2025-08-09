@@ -103,8 +103,8 @@ pub fn main() !void {
     defer db.deinit();
     {   
         const App = zap.App.Create(Sqlite);
-        var app = try App.init(allocator, &db, .{});
-        defer app.deinit();
+        try App.init(allocator, &db, .{});
+        defer App.deinit();
 
         //var index_end = IndexEndPoint { .path = "/" };
         var post_end = Enpoint.PostEndPoint { .path = "/post" };
@@ -122,11 +122,11 @@ pub fn main() !void {
         //try listener.listen();
 
         //try app.register(&index_end);
-        try app.register(&post_end);
+        try App.register(&post_end);
         //try app.register(&comment_end);
         //try app.register(&image_end);
 
-        try app.listen(.{
+        try App.listen(.{
             .interface = Config.Interface,
             .port = Config.ApiPort,
             //.on_request = on_request,

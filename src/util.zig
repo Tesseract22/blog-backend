@@ -41,3 +41,11 @@ pub fn VerifyCookie(r: zap.Request) bool {
     const sc = SessionCookie orelse return false;
     return c == sc;
 }
+
+pub fn stringifyJson(arena: std.mem.Allocator, value: anytype) ![]const u8 {
+    var writer = std.io.Writer.Allocating.init(arena);
+    var stringify = std.json.Stringify {.writer = &writer.writer};
+
+    try stringify.write(value);
+    return writer.getWritten();
+}

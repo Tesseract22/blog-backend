@@ -1,0 +1,6 @@
+[submodule "zap"]
+	path = zap
+	url = https://github.com/zigzap/zap.git
+[submodule "zig-sqlite"]
+	path = zig-sqlite
+	url = https://github.com/vrischmann/zig-sqlite.git

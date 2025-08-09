@@ -19,38 +19,43 @@ pub fn build(b: *std.Build) !void {
         var file = try std.fs.cwd().createFile(b.pathFromRoot("src/domain"), .{});
         defer file.close();
         _ = try file.writeAll(domain_value);
-    }    const exe = b.addExecutable(.{
-        .name = "backend",
+    }    
+    const main_mod = b.addModule("main", .{
         .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
         .optimize = optimize,
     });
-    b.installDirectory(.{
-        .source_dir = exe.getEmittedDocs(),
-        .install_dir = .prefix,
-        .install_subdir = "doc",
-    });
-
     // zap
     const zap = b.dependency("zap", .{
         .target = target,
         .optimize = optimize,
         .openssl = false,
     });
-    exe.root_module.addImport("zap", zap.module("zap"));
-    exe.linkLibrary(zap.artifact("facil.io"));
+    main_mod.addImport("zap", zap.module("zap"));
+    main_mod.linkLibrary(zap.artifact("facil.io"));
 
     // spltie3
     const sqlite = b.dependency("sqlite", .{
         .target = target,
         .optimize = optimize,
     });
-    exe.root_module.addImport("sqlite", sqlite.module("sqlite"));
-
+    main_mod.addImport("sqlite", sqlite.module("sqlite"));
     // links the bundled sqlite3, so leave this out if you link the system one
-    exe.linkLibrary(sqlite.artifact("sqlite"));
+    main_mod.linkLibrary(sqlite.artifact("sqlite"));
     // exe.linkSystemLibrary("sqlite3");
 
+    const exe = b.addExecutable(.{
+        .name = "backend",
+        .root_module = main_mod,
+    });
+
+    b.installDirectory(.{
+        .source_dir = exe.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "doc",
+    });
+
+    
     // tsc
     var tsc_exe = b.addSystemCommand(&.{"tsc"});
     tsc_exe.addArgs(&.{ "ts/admin.ts", "ts/common.ts", "--outDir", "public/js", "--target", "ES6" });

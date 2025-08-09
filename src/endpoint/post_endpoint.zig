@@ -11,8 +11,9 @@ const zap = @import("zap");
 const Sqlite = @import("../sqlite.zig");
 const SqliteError = Sqlite.SqliteError;
 const Post = @import("../data.zig").Post;
-const idFromPath = @import("../util.zig").idFromPath;
-const VerifyCookie = @import("../util.zig").VerifyCookie;
+const Util = @import("../util.zig");
+const idFromPath = Util.idFromPath;
+const VerifyCookie = Util.VerifyCookie;
 // an Endpoint
 
 pub const Self = @This();
@@ -48,7 +49,7 @@ pub fn get(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
     const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
     const post_data = (db.getPost(post_id, arena) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
     if (!post_data.published.? and !VerifyCookie(r)) return r.setStatus(.unauthorized);
-    const json = std.json.stringifyAlloc(arena, post_data, .{}) catch return r.setStatus(.internal_server_error);
+    const json = Util.stringifyJson(arena, post_data) catch return r.setStatus(.internal_server_error);
     r.sendJson(json) catch return r.setStatus(.internal_server_error);
     // storing ip
     if (ip_addr) |addr| {
@@ -69,7 +70,7 @@ pub fn get(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
 
 fn listPost(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request, published_only: bool) !void {
     const posts = if (published_only) try db.listPostPublished(arena) else try db.listPost(arena);
-    const json = try std.json.stringifyAlloc(arena, posts, .{});
+    const json = try Util.stringifyJson(arena, posts);
     try r.sendJson(json);
 }
 
@@ -90,7 +91,7 @@ pub fn post(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !vo
         const id = db.insertPost(post_data.value) catch {
             return r.setStatus(.internal_server_error);
         };
-        const json = try std.json.stringifyAlloc(arena, .{ .id = id }, .{});
+        const json = try Util.stringifyJson(arena, .{ .id = id });
         try r.sendJson(json);
         return r.setStatus(.ok);
     }
@@ -118,7 +119,7 @@ pub fn patch(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request)
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {
             const post_data = try db.getPostMeta(id, arena) orelse return r.setStatus(.not_found);
-            const json = try std.json.stringifyAlloc(arena, post_data, .{});
+            const json = try Util.stringifyJson(arena, post_data);
             try r.sendJson(json);
         }
     }
