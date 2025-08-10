@@ -10,11 +10,11 @@ const Sqlite = @This();
 db: sqlite.Db,
 
 pub const SqliteError = sqlite.Error;
-pub fn init() !Sqlite {
+pub fn init(path: [:0]const u8) !Sqlite {
     var res = Sqlite{ .db = undefined };
 
     res.db = try sqlite.Db.init(.{
-        .mode = sqlite.Db.Mode{ .File = @import("config.zig").DbPath },
+        .mode = sqlite.Db.Mode{ .File = path },
         .open_flags = .{
             .write = true,
             .create = true,
@@ -25,7 +25,7 @@ pub fn init() !Sqlite {
 }
 
 pub fn deinit(self: *Sqlite) void {
-    _ = self;
+    self.db.deinit();
 }
 
 // POST SCHEMA:

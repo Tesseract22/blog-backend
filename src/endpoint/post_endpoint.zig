@@ -14,7 +14,8 @@ const Post = @import("../data.zig").Post;
 const Util = @import("../util.zig");
 const idFromPath = Util.idFromPath;
 const VerifyCookie = Util.VerifyCookie;
-// an Endpoint
+
+const Ctx = @import("../endpoint.zig").Ctx;
 
 pub const Self = @This();
 
@@ -32,13 +33,13 @@ fn trimPath(path: []const u8) []const u8 {
 /// GET /post/<id> => post[<id>]
 /// GET /post => []post
 /// else => bad_request
-pub fn get(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !void {
+pub fn get(self: *Self, arena: std.mem.Allocator, ctx: *Ctx, r: zap.Request) !void {
     const path = r.path orelse return r.setStatus(.bad_request);
     // /users
     const path_trim = trimPath(path);
 
     if (path_trim.len == self.path.len) {
-        self.listPost(arena, db, r, !VerifyCookie(r)) catch return r.setStatus(.internal_server_error);
+        self.listPost(arena, ctx, r, !VerifyCookie(r)) catch return r.setStatus(.internal_server_error);
         return r.setStatus(.ok);
     }
     // get the ip from headers
@@ -47,15 +48,15 @@ pub fn get(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
     const ip_addr: ?std.net.Ip4Address = std.net.Ip4Address.parse(ip_str, 0) catch null;
     // post as in article post, not the method POST
     const post_id = self.postIdFromPath(path_trim) orelse return r.setStatus(.bad_request);
-    const post_data = (db.getPost(post_id, arena) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
+    const post_data = (ctx.db.getPost(post_id, arena) catch return r.setStatus(.internal_server_error)) orelse return r.setStatus(.not_found);
     if (!post_data.published.? and !VerifyCookie(r)) return r.setStatus(.unauthorized);
     const json = Util.stringifyJson(arena, post_data) catch return r.setStatus(.internal_server_error);
     r.sendJson(json) catch return r.setStatus(.internal_server_error);
     // storing ip
     if (ip_addr) |addr| {
-        const ip_id = db.insertIpAddr(addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
-        if (db.insertIpMap(ip_id, post_id, @divTrunc(std.time.microTimestamp(), 1000))) {
-            db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
+        const ip_id = ctx.db.insertIpAddr(addr.sa.addr) catch |err| return std.log.warn("{any} Unexpected Error while inserting ip address", .{err});
+        if (ctx.db.insertIpMap(ip_id, post_id, @divTrunc(std.time.microTimestamp(), 1000))) {
+            ctx.db.updatePostViews(post_id, 1) catch return r.setStatus(.internal_server_error);
         } else |err| {
             switch (err) {
                 SqliteError.SQLiteConstraint => {},
@@ -68,8 +69,8 @@ pub fn get(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
     return r.setStatus(.ok);
 }
 
-fn listPost(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request, published_only: bool) !void {
-    const posts = if (published_only) try db.listPostPublished(arena) else try db.listPost(arena);
+fn listPost(_: *Self, arena: std.mem.Allocator, ctx: *Ctx, r: zap.Request, published_only: bool) !void {
+    const posts = if (published_only) try ctx.db.listPostPublished(arena) else try ctx.db.listPost(arena);
     const json = try Util.stringifyJson(arena, posts);
     try r.sendJson(json);
 }
@@ -77,7 +78,7 @@ fn listPost(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request, pub
 /// POST /post/ (JSON.post) => ok
 /// else => bad_request
 /// The jso
-pub fn post(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !void {
+pub fn post(_: *Self, arena: std.mem.Allocator, ctx: *Ctx, r: zap.Request) !void {
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         const post_data = std.json.parseFromSlice(Post, arena, body, .{}) catch |err| {
@@ -88,7 +89,7 @@ pub fn post(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !vo
             return r.setStatus(.bad_request);
         }
 
-        const id = db.insertPost(post_data.value) catch {
+        const id = ctx.db.insertPost(post_data.value) catch {
             return r.setStatus(.internal_server_error);
         };
         const json = try Util.stringifyJson(arena, .{ .id = id });
@@ -98,7 +99,7 @@ pub fn post(_: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !vo
     r.setStatus(.bad_request);
 }
 
-pub fn put(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !void {
+pub fn put(self: *Self, arena: std.mem.Allocator, ctx: *Ctx, r: zap.Request) !void {
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.body) |body| {
         var post_data = std.json.parseFromSlice(Post, arena, body, .{}) catch {
@@ -107,7 +108,7 @@ pub fn put(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
         };
         const id = self.postIdFromPath(trimPath(r.path orelse "")) orelse return r.setStatus(.bad_request);
         post_data.value.id = id;
-        try db.updatePost(post_data.value);
+        try ctx.db.updatePost(post_data.value);
         r.setStatus(.ok);
     } else {
         std.log.err("No body", .{});
@@ -115,22 +116,22 @@ pub fn put(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !
     }
 }
 
-pub fn patch(self: *Self, arena: std.mem.Allocator, db: *Sqlite, r: zap.Request) !void {
+pub fn patch(self: *Self, arena: std.mem.Allocator, ctx: *Ctx, r: zap.Request) !void {
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {
-            const post_data = try db.getPostMeta(id, arena) orelse return r.setStatus(.not_found);
+            const post_data = try ctx.db.getPostMeta(id, arena) orelse return r.setStatus(.not_found);
             const json = try Util.stringifyJson(arena, post_data);
             try r.sendJson(json);
         }
     }
 }
 
-pub fn delete(self: *Self, _: std.mem.Allocator, db: *Sqlite, r: zap.Request) !void {
+pub fn delete(self: *Self, _: std.mem.Allocator, ctx: *Ctx, r: zap.Request) !void {
     if (!VerifyCookie(r)) return r.setStatus(.unauthorized);
     if (r.path) |path| {
         if (self.postIdFromPath(path)) |id| {
             std.log.debug("delete: {}", .{id});
-            db.deletePost(id) catch {
+            ctx.db.deletePost(id) catch {
                 r.setStatus(.bad_request);
                 return;
             };
@@ -139,7 +140,3 @@ pub fn delete(self: *Self, _: std.mem.Allocator, db: *Sqlite, r: zap.Request) !v
     }
     r.setStatus(.bad_request);
 }
-
-pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-// TODO: retrieve post metadata with HEAD
-pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}

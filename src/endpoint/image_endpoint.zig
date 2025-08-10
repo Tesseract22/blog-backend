@@ -8,10 +8,10 @@ const Self = @This();
 const Config = @import("../config.zig");
 const PublicFolder = Config.PublicFolder;
 const ImageFolder = Config.ImageFolder;
+const Ctx = @import("../endpoint.zig").Ctx;
 
 image_dir: std.fs.Dir,
 path: []const u8,
-id: std.Thread.Id,
 error_strategy: zap.Endpoint.ErrorStrategy = .log_to_console,
 
 
@@ -21,7 +21,6 @@ pub fn init(
     return .{
         .image_dir = std.fs.cwd().openDir(PublicFolder ++ ImageFolder, .{.iterate = true}) catch unreachable,
         .path = path,
-        .id = std.Thread.getCurrentId(),
     };
 }
 
@@ -73,7 +72,7 @@ fn postIdFromPath(self: *Self, path: []const u8) ?usize {
 }
 
 /// POST  /image/<i>
-pub fn post(self: *Self, arena: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
+pub fn post(self: *Self, arena: std.mem.Allocator, _: *Ctx, r: zap.Request) !void {
     r.parseBody() catch |err| {
         std.log.err("Parse Body error: {any}. Expected if body is empty", .{err});
         return r.setStatus(.bad_request);
@@ -174,7 +173,7 @@ fn deleteImage(e: *zap.Endpoint, r: zap.Request) void {
     r.markAsFinished(true);
 }    
 
-pub fn get(_: *Self, _: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
+pub fn get(_: *Self, _: std.mem.Allocator, _: *Ctx, r: zap.Request) !void {
     const path = r.path orelse return r.setStatus(.not_found);
     const ext = std.fs.path.extension(path);
     const name = path[0 .. path.len - ext.len];
@@ -182,9 +181,3 @@ pub fn get(_: *Self, _: std.mem.Allocator, _: *Sqlite, r: zap.Request) !void {
     if (!std.mem.eql(u8, ext, ".webp")) return r.setStatus(.not_found);
     return;
 }
-
-pub fn put(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn delete(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn patch(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn options(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}
-pub fn head(_: *Self, _: std.mem.Allocator, _: *Sqlite, _: zap.Request) !void {}

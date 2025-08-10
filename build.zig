@@ -4,8 +4,9 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const password = b.option([]const u8, "password", "Generating Password for admin");
-    const domain = b.option([]const u8, "domain", "Domain for the website, default to localhost in debug mode");
 
+    const domain = b.option([]const u8, "domain", "Domain for the website, default to localhost in debug mode");
+        
     if (password) |password_value| {
         const hash = std.hash_map.hashString(password_value);
         const len = @typeInfo(@TypeOf(hash)).int.bits / 4;
@@ -29,7 +30,7 @@ pub fn build(b: *std.Build) !void {
     const zap = b.dependency("zap", .{
         .target = target,
         .optimize = optimize,
-        .openssl = false,
+        .openssl = true,
     });
     main_mod.addImport("zap", zap.module("zap"));
     main_mod.linkLibrary(zap.artifact("facil.io"));
@@ -55,6 +56,21 @@ pub fn build(b: *std.Build) !void {
         .install_subdir = "doc",
     });
 
+    // mock databse
+    const mock_step = b.step("mock", "create a mock database");
+    const mock_mod = b.addModule("mock", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("src/mock_db.zig"),
+        .link_libc = true,
+    });
+    mock_mod.addImport("sqlite", sqlite.module("sqlite"));
+    const mock_exe = b.addExecutable(.{
+        .name = "mock",
+        .root_module = mock_mod,
+    });
+    const mock_run = b.addRunArtifact(mock_exe);
+    mock_step.dependOn(&mock_run.step);
     
     // tsc
     var tsc_exe = b.addSystemCommand(&.{"tsc"});

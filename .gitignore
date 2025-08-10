@@ -10,3 +10,5 @@ blog_rsa
 log.txt
 public/video
 public/image
+src/domain
+mock.db
