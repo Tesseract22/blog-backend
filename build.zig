@@ -46,7 +46,7 @@ pub fn build(b: *std.Build) !void {
     // exe.linkSystemLibrary("sqlite3");
 
     const exe = b.addExecutable(.{
-        .name = "backend",
+        .name = "server",
         .root_module = main_mod,
     });
 

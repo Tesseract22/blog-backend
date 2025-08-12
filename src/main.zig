@@ -12,6 +12,7 @@ const Option = struct {
     port: u32,
     interface: [:0]const u8,
     db_path: [:0]const u8,
+    public_path: [:0]const u8,
 };
 
 pub fn main() !void {
@@ -31,6 +32,7 @@ pub fn main() !void {
     arg_parser.add_opt(u32, &opt.port, &3000, .{.prefix = "-p"}, "<port>", "ip port");
     arg_parser.add_opt([:0]const u8, &opt.interface, null, .positional, "<interface>", "ip interface");
     arg_parser.add_opt([:0]const u8, &opt.db_path, &"mock.db", .{.prefix = "-db"}, "<db-path>", "database path");
+    arg_parser.add_opt([:0]const u8, &opt.public_path, &"public", .{.prefix = "--public"}, "<public-path>", "public path");
     try arg_parser.parse(&args);
 
     var db = try Sqlite.init(opt.db_path);
@@ -43,15 +45,15 @@ pub fn main() !void {
         defer App.deinit();
 
         var post_end = Enpoint.PostEndPoint { .path = "/post" };
-        var image_end = Enpoint.ImageEndPoint.init("/image");
+        // var image_end = Enpoint.ImageEndPoint.init("/image");
         try App.register(&post_end);
-        try App.register(&image_end);
+        // try App.register(&image_end);
         //try app.register(&comment_end);
 
         try App.listen(.{
             .interface = opt.interface,
             .port = opt.port,
-            .public_folder = Config.PublicFolder,
+            .public_folder = opt.public_path,
             .max_body_size = 100 * 1024 * 1024, 
             .tls = null
         });

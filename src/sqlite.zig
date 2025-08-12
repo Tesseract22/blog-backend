@@ -17,7 +17,7 @@ pub fn init(path: [:0]const u8) !Sqlite {
         .mode = sqlite.Db.Mode{ .File = path },
         .open_flags = .{
             .write = true,
-            .create = true,
+            .create = false,
         },
         .threading_mode = .MultiThread,
     });
