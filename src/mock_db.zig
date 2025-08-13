@@ -15,8 +15,8 @@ pub fn main() !void {
     db.execMulti(schema, .{.diags = &diag}) catch |e| {
         std.log.debug("{}: {f}", .{e, diag});
     };
-
-    const insert = 
+    {
+        const insert = 
         \\INSERT INTO POST 
         \\(CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, PUBLISHED, COVER_URL, ROWID)
         \\  values (
@@ -30,8 +30,28 @@ pub fn main() !void {
         \\          "/image/cover.jpg", 
         \\          NULL)
         ;
-    db.exec(insert, .{.diags = &diag}, .{}) catch |e| {
-        std.log.debug("{}: {f}", .{e, diag});
-    };
+        db.exec(insert, .{.diags = &diag}, .{}) catch |e| {
+            std.log.debug("{}: {f}", .{e, diag});
+        };
+    }
+    {
+        const insert = 
+        \\INSERT INTO POST 
+        \\(CREATED_TIME, MODIFIED_TIME, TITLE, VIEWS, AUTHOR, CONTENT, PUBLISHED, COVER_URL, ROWID)
+        \\  values (
+        \\          strftime('%s', 'now'),
+        \\          strftime('%s', 'now'),
+        \\          "My Blog", 
+        \\          114515, 
+        \\          "Author X",
+        \\          ?,
+        \\          true, 
+        \\          "/image/cover.jpg", 
+        \\          NULL)
+        ;
+        db.exec(insert, .{.diags = &diag}, .{"# This is a marked down\n## sub title\n\nthis is a content, latex: $$\\frac{1}{2}$$"}) catch |e| {
+            std.log.debug("{}: {f}", .{e, diag});
+        };
+    }
 
 }
