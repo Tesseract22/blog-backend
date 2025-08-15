@@ -1,7 +1,11 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
-    const target = b.standardTargetOptions(.{});
+    const target = b.standardTargetOptions(.{
+        .default_target = .{
+            .glibc_version = std.SemanticVersion {.major = 2, .minor = 28, .patch = 0},
+        }
+    });
     const optimize = b.standardOptimizeOption(.{});
     const password = b.option([]const u8, "password", "Generating Password for admin");
 
@@ -30,7 +34,6 @@ pub fn build(b: *std.Build) !void {
     const zap = b.dependency("zap", .{
         .target = target,
         .optimize = optimize,
-        .openssl = true,
     });
     main_mod.addImport("zap", zap.module("zap"));
     main_mod.linkLibrary(zap.artifact("facil.io"));

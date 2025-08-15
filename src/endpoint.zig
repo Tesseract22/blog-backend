@@ -9,8 +9,6 @@ pub const PostEndPoint = @import("endpoint/post_endpoint.zig");
 pub const ImageEndPoint = @import("endpoint/image_endpoint.zig");
 
 const SubPath = enum {
-    article,
-    login,
     auth,
     admin,
     const MatchResult = struct {
@@ -32,6 +30,7 @@ const SubPath = enum {
 pub const Ctx = struct {
     db: Sqlite,
     rand: std.Random,
+    index: []const u8,
 
     pub fn unhandledRequest(self: *Ctx, _: std.mem.Allocator, r: zap.Request) anyerror!void {
         blk: {
@@ -41,20 +40,6 @@ pub const Ctx = struct {
                 const match = SubPath.match(sec) orelse break :blk;
                 std.debug.print("sec: {s}\n", .{sec});
                 switch (match.keyword) {
-                    .article => {
-                        const id = it.next() orelse "";
-                            if (id.len > 0) {
-                                r.sendFile(Config.PublicFolder ++ "index.html") catch break :blk;
-                                    return;
-                            } else {
-                                std.debug.print("redirect\n", .{});
-                                    return r.redirectTo("/", null) catch break :blk;
-                            }
-                    },
-                    .login => {
-                        r.sendFile(Config.PublicFolder ++ "html/login.html") catch break :blk;
-                            return;
-                    },
                     .auth => {
                         if (!util.AuthRequest(r)) {
                             std.debug.print("auth failed\n", .{});
@@ -85,9 +70,7 @@ pub const Ctx = struct {
                     },
                 }
         }
-        
-            std.log.debug("here", .{});
-            r.sendBody("<html><body><h1>404</h1></body></html>") catch return;
-            r.setStatus(.not_found);
+        
+        try r.sendFile("public/index.html");
     }
 };

@@ -15,6 +15,32 @@ const Option = struct {
     public_path: [:0]const u8,
 };
 
+const LoginEndPoint = struct {
+    path: []const u8,
+    error_strategy: zap.Endpoint.ErrorStrategy = .log_to_console,
+    const Self = @This();
+    pub fn post(_: *Self, _: std.mem.Allocator, ctx: *Enpoint.Ctx, r: zap.Request) !void {
+        if (!util.AuthRequest(r)) {
+            std.debug.print("auth failed\n", .{});
+                r.sendBody("Authentication Failed") catch {};
+            return r.setStatus(.unauthorized);
+        }
+        var buf = [_]u8{0} ** 20;
+        const cookie_val = ctx.rand.int(u64);
+        const val = std.fmt.bufPrint(&buf, "{}", .{cookie_val}) catch unreachable;
+        r.setCookie(.{
+            .name = "admin-cookie",
+            .value = val,
+            .domain = null,
+            .path = null,
+            .secure = @import("builtin").mode != .Debug,
+        }) catch return;
+        util.SessionCookie = cookie_val;
+        r.sendBody("Set Cookie") catch {};
+        return r.setStatus(.ok);
+    }
+};
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{
         .thread_safe = true,
@@ -23,48 +49,51 @@ pub fn main() !void {
     defer args.deinit();
 
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+        const allocator = gpa.allocator();
 
-    var opt: Option = undefined;
+        var opt: Option = undefined;
 
     var arg_parser = Cli.ArgParser {.a = allocator, .pgm_name = args.next().?};
     defer arg_parser.deinit();
     arg_parser.add_opt(u32, &opt.port, &3000, .{.prefix = "-p"}, "<port>", "ip port");
     arg_parser.add_opt([:0]const u8, &opt.interface, null, .positional, "<interface>", "ip interface");
     arg_parser.add_opt([:0]const u8, &opt.db_path, &"mock.db", .{.prefix = "-db"}, "<db-path>", "database path");
-    arg_parser.add_opt([:0]const u8, &opt.public_path, &"public", .{.prefix = "--public"}, "<public-path>", "public path");
+    arg_parser.add_opt([:0]const u8, &opt.public_path, &"", .{.prefix = "--public"}, "<public-path>", "public path");
     try arg_parser.parse(&args);
 
     var db = try Sqlite.init(opt.db_path);
-    defer db.deinit();
-    { 
-        var rand = std.Random.Xoroshiro128.init(@intCast(std.time.microTimestamp()));
-        var ctx = Enpoint.Ctx {.db = db, .rand = rand.random()};
-        const App = zap.App.Create(Enpoint.Ctx);
-        try App.init(allocator, &ctx, .{});
-        defer App.deinit();
+        defer db.deinit();
+        { 
+            var rand = std.Random.Xoroshiro128.init(@intCast(std.time.microTimestamp()));
+            var ctx = Enpoint.Ctx {.db = db, .rand = rand.random(), .index = try std.fs.path.resolve(allocator, &.{opt.public_path, "index.html"})};
+            defer allocator.free(ctx.index);
+            const App = zap.App.Create(Enpoint.Ctx);
+                try App.init(allocator, &ctx, .{});
+                defer App.deinit();
+                
+                var post_end = Enpoint.PostEndPoint { .path = "/api/post",  };
+            var login_end: LoginEndPoint = .{ .path = "/api/login" };
+            // var image_end = Enpoint.ImageEndPoint.init("/image");
+            try App.register(&post_end);
+            try App.register(&login_end);
+            // try App.register(&image_end);
+            //try app.register(&comment_end);
 
-        var post_end = Enpoint.PostEndPoint { .path = "/post" };
-        // var image_end = Enpoint.ImageEndPoint.init("/image");
-        try App.register(&post_end);
-        // try App.register(&image_end);
-        //try app.register(&comment_end);
-
-        try App.listen(.{
-            .interface = opt.interface,
-            .port = opt.port,
-            .public_folder = opt.public_path,
-            .max_body_size = 100 * 1024 * 1024, 
-            .tls = null
-        });
-
-        std.log.debug("Web Starting at {s}:{}, using db {s}", .{opt.interface, opt.port, opt.db_path});
-
-
-        zap.start(.{
-            .threads = 2,
-            .workers = 1,
-        });
-        // show potential memory leaks when ZAP is shut down
-    }
+            try App.listen(.{
+                .interface = opt.interface,
+                    .port = opt.port,
+                    .public_folder = if (opt.public_path.len == 0) null else opt.public_path,
+                    .max_body_size = 100 * 1024 * 1024, 
+                    .tls = null
+            });
+            
+                std.log.debug("Web Starting at {s}:{}, using db {s}", .{opt.interface, opt.port, opt.db_path});
+                
+                
+                zap.start(.{
+                    .threads = 2,
+                        .workers = 1,
+                });
+            // show potential memory leaks when ZAP is shut down
+        }
 }
